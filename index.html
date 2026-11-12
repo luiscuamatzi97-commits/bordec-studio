@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bordec Studio</title>
+<meta name="description" content="Bordado y estampado DTF: playeras, sudaderas, polos y uniformes. Pide por WhatsApp.">
+<meta name="theme-color" content="#ebebea">
+<meta property="og:title" content="Bordec Studio">
+<meta property="og:description" content="Bordado y estampado DTF: playeras, sudaderas, polos y uniformes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e0e0e'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23fff' stroke-width='2' stroke-dasharray='3 2.4'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#catalogo">Saltar al catálogo</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="fold" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#000" stop-opacity=".22"/>
+      <stop offset=".22" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity=".06"/>
+      <stop offset=".78" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".2"/>
+    </linearGradient>
+    <linearGradient id="drape" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#000" stop-opacity=".12"/>
+      <stop offset=".25" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".1"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div id="adminbar" class="adminbar" hidden>
+  <div class="adminbar-in">
+    <span class="adminbar-label"><span class="dot" aria-hidden="true"></span>Modo edición <span class="meta-hide">· toca cualquier texto o prenda para cambiarlo</span></span>
+    <div class="adminbar-actions">
+      <button class="btn btn-sm btn-light" id="aNew" type="button">+ Prenda</button>
+      <button class="btn btn-sm btn-ghost-light" id="aPage" type="button">Logo y contacto</button>
+      <button class="btn btn-sm btn-ghost-light" id="aImport" type="button">Importar del dashboard</button>
+      <button class="btn btn-sm btn-ghost-light" id="aPreview" type="button" aria-pressed="false">Ver como cliente</button>
+      <button class="btn btn-sm btn-ghost-light" id="aOut" type="button">Salir</button>
+    </div>
+  </div>
+</div>
+
+<header class="top" id="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#perchero" aria-label="Inicio">
+      <img id="logo" alt="" hidden>
+      <span id="wordmark" class="wordmark" data-k="name">Bordec Studio</span>
+    </a>
+    <nav class="nav" aria-label="Secciones">
+      <a href="#perchero">Perchero</a>
+      <a href="#catalogo">Catálogo</a>
+      <a href="#pedir">Cómo pedir</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <button class="bagbtn" id="bagBtn" type="button" aria-label="Abrir bolsa">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+      <span>Bolsa</span><span class="bagcount" id="bagCount">0</span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" id="perchero" aria-labelledby="heroTitle">
+    <div class="wrap hero-head">
+      <div class="hero-title">
+        <p class="eyebrow" data-k="eyebrow">Taller de bordado y DTF</p>
+        <h1 id="heroTitle" data-k="hero_title">Ropa con puntada propia.</h1>
+        <div class="stitch" aria-hidden="true"><i></i><i></i><i></i></div>
+      </div>
+      <div class="hero-side">
+        <p class="lead" data-k="hero_text">Playeras, sudaderas, polos y uniformes con bordado o estampado DTF.</p>
+        <dl class="facts" id="facts"></dl>
+        <div class="hero-cta">
+          <a class="btn btn-dark" href="#catalogo">Ver el catálogo</a>
+          <a class="btn btn-wa-outline" id="heroWa" href="#contacto" target="_blank" rel="noopener">Cotizar por WhatsApp</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rack" id="rack">
+      <div class="rack-scroll" id="rackScroll" tabindex="0" aria-label="Perchero de prendas, desliza para ver más">
+        <div class="rack-track" id="rackTrack">
+          <div class="rail" aria-hidden="true"></div>
+        </div>
+      </div>
+      <div class="rack-floor" aria-hidden="true"></div>
+    </div>
+    <div class="wrap rack-foot">
+      <p class="rack-caption" id="rackCaption" aria-live="polite"><span data-k="rack_hint">Pasa el cursor o desliza el perchero. Toca una prenda para verla.</span></p>
+      <div class="rack-ctrl">
+        <button class="iconbtn" id="rackPrev" type="button" aria-label="Prendas anteriores"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        <button class="iconbtn" id="rackNext" type="button" aria-label="Más prendas"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="catalog" id="catalogo" aria-labelledby="catTitle">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="catTitle" data-k="catalog_title">Catálogo</h2>
+        <p class="sec-text" data-k="catalog_text">Precios por pieza en MXN.</p>
+      </div>
+      <div class="chips" id="chips" role="toolbar" aria-label="Filtrar por categoría"></div>
+      <div class="grid" id="grid" aria-live="polite">
+        <p class="empty">Cargando prendas…</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="howto" id="pedir" aria-labelledby="stepsTitle">
+    <div class="wrap">
+      <h2 id="stepsTitle" data-k="steps_title">Cómo pedir</h2>
+      <ol class="steps">
+        <li><span class="step-n">1</span><p data-k="step1">Arma tu bolsa.</p></li>
+        <li><span class="step-n">2</span><p data-k="step2">Envíanos tu pedido por WhatsApp.</p></li>
+        <li><span class="step-n">3</span><p data-k="step3">Aprobamos el boceto y producimos.</p></li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer class="foot" id="contacto">
+  <div class="wrap foot-in">
+    <div class="foot-about">
+      <p class="foot-name" data-k="name">Bordec Studio</p>
+      <p data-k="about">Bordamos y estampamos en nuestro taller.</p>
+      <a class="btn btn-wa" id="footWa" href="#" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>
+    </div>
+    <dl class="foot-list" id="footList"></dl>
+  </div>
+  <div class="wrap foot-base">
+    <span>© <span id="year"></span> <span data-k="name">Bordec Studio</span></span>
+    <button class="linkbtn" id="adminLink" type="button">Acceso para el taller</button>
+  </div>
+</footer>
+
+<!-- Product detail -->
+<dialog id="dlgProduct" class="dlg dlg-wide" aria-labelledby="pdName">
+  <div class="pd">
+    <div class="pd-visual" id="pdVisual"></div>
+    <div class="pd-info">
+      <button class="iconbtn dlg-x" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
+      <p class="pd-cat" id="pdCat"></p>
+      <h3 id="pdName"></h3>
+      <p class="pd-badge" id="pdBadge" hidden></p>
+      <p class="pd-desc" id="pdDesc"></p>
+      <div class="pd-price"><span id="pdPrice"></span><span class="pd-ws" id="pdWs"></span></div>
+      <div class="qty">
+        <label for="pdQty">Cantidad</label>
+        <div class="qty-ctl">
+          <button class="iconbtn" type="button" id="pdMinus" aria-label="Quitar una">−</button>
+          <input id="pdQty" type="number" min="1" value="1" inputmode="numeric">
+          <button class="iconbtn" type="button" id="pdPlus" aria-label="Agregar una">+</button>
+        </div>
+        <span class="qty-total" id="pdTotal"></span>
+      </div>
+      <div class="pd-actions">
+        <button class="btn btn-dark" type="button" id="pdAdd">Agregar a la bolsa</button>
+        <a class="btn btn-wa-outline" id="pdWa" href="#" target="_blank" rel="noopener">Preguntar por WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Bag -->
+<dialog id="dlgBag" class="dlg drawer" aria-labelledby="bagTitle">
+  <div class="drawer-in">
+    <div class="drawer-head">
+      <h3 id="bagTitle">Tu bolsa</h3>
+      <button class="iconbtn" type="button" data-close aria-label="Cerrar bolsa"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
+    </div>
+    <div class="bag-list" id="bagList"></div>
+    <div class="bag-foot" id="bagFoot">
+      <label for="bagName">Tu nombre</label>
+      <input id="bagName" type="text" autocomplete="name">
+      <label for="bagNotes">Tallas, colores y detalles del diseño</label>
+      <textarea id="bagNotes" rows="3" placeholder="Ej. 3 M, 2 L, logo en el pecho izquierdo"></textarea>
+      <div class="bag-total"><span>Total estimado</span><b id="bagTotal">$0</b></div>
+      <p class="bag-note">El total final se confirma por WhatsApp junto con tu diseño.</p>
+      <a class="btn btn-wa" id="bagSend" href="#" target="_blank" rel="noopener">Enviar pedido por WhatsApp</a>
+      <p class="bag-err" id="bagErr" hidden></p>
+    </div>
+  </div>
+</dialog>
+
+<!-- Login -->
+<dialog id="dlgLogin" class="dlg dlg-sm" aria-labelledby="loginTitle">
+  <form id="loginForm" class="form" novalidate>
+    <div class="drawer-head">
+      <h3 id="loginTitle">Acceso para el taller</h3>
+      <button class="iconbtn" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
+    </div>
+    <p class="form-help">Entra con la misma cuenta de tu dashboard de Bordec Studio.</p>
+    <label for="lgEmail">Correo</label>
+    <input id="lgEmail" type="email" autocomplete="username" required>
+    <label for="lgPass">Contraseña</label>
+    <input id="lgPass" type="password" autocomplete="current-password" required>
+    <p class="form-err" id="lgErr" hidden></p>
+    <button class="btn btn-dark" type="submit" id="lgBtn">Entrar a editar</button>
+  </form>
+</dialog>
+
+<!-- Product editor -->
+<dialog id="dlgEdit" class="dlg dlg-wide" aria-labelledby="edTitle">
+  <form id="edForm" class="ed" novalidate>
+    <div class="ed-preview">
+      <div id="edPreview"></div>
+      <p class="form-help">Vista previa en el perchero</p>
+    </div>
+    <div class="ed-fields form">
+      <div class="drawer-head">
+        <h3 id="edTitle">Editar prenda</h3>
+        <button class="iconbtn" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
+      </div>
+      <label for="edName">Nombre</label>
+      <input id="edName" type="text" required>
+      <div class="two">
+        <div><label for="edCat">Categoría</label><input id="edCat" type="text" list="catList"><datalist id="catList"></datalist></div>
+        <div><label for="edGarment">Tipo de prenda</label>
+          <select id="edGarment">
+            <option value="tee">Playera regular</option>
+            <option value="oversized">Playera oversized</option>
+            <option value="longsleeve">Playera manga larga</option>
+            <option value="polo">Polo</option>
+            <option value="shirt-short">Camisa manga corta</option>
+            <option value="shirt">Camisa manga larga</option>
+            <option value="crewneck">Sudadera sin gorro</option>
+            <option value="hoodie">Sudadera con gorro</option>
+            <option value="sheet">Hoja (stickers / tatuajes)</option>
+            <option value="photo">Solo la foto, colgada con pinza</option>
+          </select>
+        </div>
+      </div>
+      <label for="edDesc">Descripción</label>
+      <textarea id="edDesc" rows="3"></textarea>
+      <div class="three">
+        <div><label for="edPrice">Precio</label><input id="edPrice" type="number" min="0" inputmode="decimal"></div>
+        <div><label for="edWs">Precio mayoreo</label><input id="edWs" type="number" min="0" inputmode="decimal"></div>
+        <div><label for="edWsMin">Desde (piezas)</label><input id="edWsMin" type="number" min="0" inputmode="numeric"></div>
+      </div>
+      <p class="form-help">Con precio 0 la prenda se muestra como «Cotizar».</p>
+      <span class="label" id="edColorLbl">Color de la prenda</span>
+      <div class="swatches" id="edSwatches" role="group" aria-labelledby="edColorLbl"></div>
+      <span class="label">Foto o diseño</span>
+      <div class="photo-row">
+        <img id="edImg" alt="" hidden>
+        <label class="btn btn-sm btn-outline" for="edFile">Subir foto</label>
+        <input id="edFile" type="file" accept="image/*" hidden>
+        <button class="btn btn-sm btn-ghost" type="button" id="edImgDel" hidden>Quitar foto</button>
+      </div>
+      <p class="form-help">Usa un PNG sin fondo para que el diseño se vea estampado sobre la prenda.</p>
+      <div class="two">
+        <div><label for="edBadge">Etiqueta (opcional)</label><input id="edBadge" type="text" placeholder="Ej. Nuevo"></div>
+        <div><label for="edSort">Orden</label><input id="edSort" type="number" inputmode="numeric"></div>
+      </div>
+      <label class="check"><input id="edRack" type="checkbox"> Colgar en el perchero</label>
+      <label class="check"><input id="edVisible" type="checkbox"> Visible en la página</label>
+      <p class="form-err" id="edErr" hidden></p>
+      <div class="ed-actions">
+        <button class="btn btn-dark" type="submit" id="edSave">Guardar prenda</button>
+        <button class="btn btn-ghost danger" type="button" id="edDel">Eliminar</button>
+      </div>
+      <div class="confirm" id="edConfirm" hidden>
+        <p id="edConfirmText"></p>
+        <div class="ed-actions">
+          <button class="btn btn-danger" type="button" id="edDelYes">Sí, eliminar</button>
+          <button class="btn btn-ghost" type="button" id="edDelNo">Conservar</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- Page settings -->
+<dialog id="dlgPage" class="dlg dlg-md" aria-labelledby="pgTitle">
+  <form id="pgForm" class="form" novalidate>
+    <div class="drawer-head">
+      <h3 id="pgTitle">Logo y contacto</h3>
+      <button class="iconbtn" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
+    </div>
+    <span class="label">Logo</span>
+    <div class="photo-row">
+      <img id="pgLogo" alt="Logo actual" hidden>
+      <label class="btn btn-sm btn-outline" for="pgFile">Subir logo</label>
+      <input id="pgFile" type="file" accept="image/*" hidden>
+      <button class="btn btn-sm btn-ghost" type="button" id="pgLogoDel" hidden>Quitar logo</button>
+    </div>
+    <p class="form-help">Sin logo se muestra el nombre del negocio.</p>
+    <label for="pgName">Nombre del negocio</label>
+    <input id="pgName" type="text">
+    <label for="pgWa">WhatsApp para pedidos</label>
+    <input id="pgWa" type="tel" inputmode="tel" placeholder="10 dígitos, ej. 2461234567">
+    <div class="two">
+      <div><label for="pgIg">Instagram</label><input id="pgIg" type="url" placeholder="https://instagram.com/…"></div>
+      <div><label for="pgFb">Facebook</label><input id="pgFb" type="url" placeholder="https://facebook.com/…"></div>
+    </div>
+    <div class="two">
+      <div><label for="pgTk">TikTok</label><input id="pgTk" type="url" placeholder="https://tiktok.com/@…"></div>
+      <div><label for="pgEmail">Correo</label><input id="pgEmail" type="email"></div>
+    </div>
+    <label for="pgLoc">Ubicación</label>
+    <input id="pgLoc" type="text" placeholder="Ciudad, estado o dirección">
+    <label for="pgHours">Horario</label>
+    <input id="pgHours" type="text" placeholder="Lun a sáb, 10:00 a 19:00">
+    <p class="form-err" id="pgErr" hidden></p>
+    <button class="btn btn-dark" type="submit">Guardar cambios</button>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="supabase.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
