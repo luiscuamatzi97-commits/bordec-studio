@@ -75,64 +75,40 @@
 </header>
 
 <main id="main">
-  <!-- HERO / STUDIO -->
-  <section class="studio-sec" id="temporada" aria-labelledby="heroTitle">
-    <div class="wrap">
-      <div class="studio-head">
-        <h1 id="heroTitle"><span data-k="hero_title">Ropa con puntada propia.</span></h1>
-        <p class="studio-lead" data-k="hero_text">Playeras, sudaderas, polos y uniformes con bordado o estampado DTF.</p>
+  <!-- HERO / WHEEL -->
+  <section class="hero" id="temporada" aria-labelledby="heroTitle">
+    <span class="cross" style="left:4%;top:28px" aria-hidden="true"></span>
+    <span class="cross" style="left:36%;top:28px" aria-hidden="true"></span>
+    <span class="cross" style="right:36%;top:28px" aria-hidden="true"></span>
+    <span class="cross" style="right:4%;top:28px" aria-hidden="true"></span>
+    <div class="wrap hero-top">
+      <p class="hero-kicker" data-k="hero_kicker">Bienvenido al taller</p>
+      <svg class="hero-mark" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="3.2 2.4"/><circle cx="20" cy="20" r="5" fill="currentColor"/></svg>
+    </div>
+    <div class="hero-titlebox">
+      <span class="hero-red" aria-hidden="true"></span>
+      <button class="tri tri-l" id="wPrev" type="button" aria-label="Diseño anterior"></button>
+      <h1 id="heroTitle" class="roll" aria-label="Bordec Studio"><span class="roll-word" id="rollWord" aria-hidden="true"></span></h1>
+      <button class="tri tri-r" id="wNext" type="button" aria-label="Siguiente diseño"></button>
+    </div>
+    <div class="wrap hero-meta">
+      <span data-k="eyebrow">Taller de bordado y DTF</span>
+      <span data-k="season_word">Temporada 26</span>
+    </div>
+
+    <div class="wheel" id="wheel" tabindex="0" role="listbox" aria-label="Diseños de la temporada. Arrastra, toca una tarjeta o usa las flechas.">
+      <div class="wheel-ring" aria-hidden="true">
+        <svg viewBox="0 0 400 400"><defs><path id="ringPath" d="M200 200 m-170 0 a170 170 0 1 1 340 0 a170 170 0 1 1 -340 0"/></defs>
+          <circle cx="200" cy="200" r="196" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 6"/>
+          <text><textPath href="#ringPath" id="ringText">BORDEC STUDIO • TEMPORADA 26 • BORDEC STUDIO • TEMPORADA 26 • </textPath></text>
+        </svg>
       </div>
-
-      <div class="studio" id="studio">
-        <p class="studio-bgword" aria-hidden="true" data-k="season_word">Temporada 26</p>
-
-        <!-- Left: options panel -->
-        <aside class="panel" aria-label="Opciones de la prenda">
-          <div class="box box-main">
-            <p class="box-label" id="stCat">Temporada</p>
-            <h2 class="st-name" id="stName">Cargando prendas…</h2>
-            <div class="st-price"><span id="stPrice">—</span><span class="st-ws" id="stWs"></span></div>
-          </div>
-          <div class="box" id="stSizesBox">
-            <p class="box-label">Talla</p>
-            <div class="sizes" id="stSizes" role="radiogroup" aria-label="Talla"></div>
-          </div>
-          <div class="box" id="stColorsBox">
-            <p class="box-label">Color <span class="box-val" id="stColorName"></span></p>
-            <div class="colors" id="stColors" role="radiogroup" aria-label="Color"></div>
-          </div>
-          <div class="box box-buy">
-            <div class="qty-row">
-              <span class="box-label">Cantidad</span>
-              <div class="qty-ctl">
-                <button class="iconbtn dark" type="button" id="stMinus" aria-label="Quitar una">−</button>
-                <input id="stQty" type="number" min="1" value="1" inputmode="numeric" aria-label="Cantidad">
-                <button class="iconbtn dark" type="button" id="stPlus" aria-label="Agregar una">+</button>
-              </div>
-            </div>
-            <p class="st-total" id="stTotal"></p>
-            <button class="btn btn-light btn-block" type="button" id="stAdd">Agregar a la bolsa</button>
-            <a class="btn btn-wa btn-block" id="stWa" href="#contacto" target="_blank" rel="noopener">Pedir por WhatsApp</a>
-          </div>
-        </aside>
-
-        <!-- Center: model -->
-        <div class="stage" id="stage" aria-live="polite">
-          <div class="stage-count"><span id="stIdx">01</span><span class="stage-of" id="stOf">/ 16</span></div>
-          <div class="stage-fig" id="stageFig"></div>
-          <div class="stage-floor" aria-hidden="true"></div>
-          <p class="stage-note" id="stageNote">Maniquí ilustrativo</p>
-        </div>
-
-        <!-- Right: perspective stack -->
-        <div class="deck-wrap">
-          <div class="deck" id="deck" tabindex="0" role="listbox" aria-label="Diseños de la temporada. Arrastra, desliza o usa las flechas."></div>
-          <div class="deck-ctrl">
-            <button class="iconbtn dark" id="deckPrev" type="button" aria-label="Diseño anterior"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
-            <span class="deck-hint">Arrastra o toca</span>
-            <button class="iconbtn dark" id="deckNext" type="button" aria-label="Siguiente diseño"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
-          </div>
-        </div>
+      <div class="wheel-cards" id="wheelCards"></div>
+      <div class="wheel-pointer">
+        <span class="wp-arrow" aria-hidden="true">▲</span>
+        <p class="wp-name" id="wName" aria-live="polite">Cargando diseños…</p>
+        <p class="wp-price" id="wPrice"></p>
+        <button class="btn btn-dark" id="wOpen" type="button">Elegir talla y color</button>
       </div>
     </div>
   </section>
@@ -259,7 +235,7 @@
   <form id="edForm" class="ed" novalidate>
     <div class="ed-preview">
       <div id="edPreview"></div>
-      <p class="form-help">Vista previa en la modelo</p>
+      <p class="form-help">Vista previa</p>
     </div>
     <div class="ed-fields form">
       <div class="drawer-head">
@@ -307,14 +283,14 @@
         <input id="edFile" type="file" accept="image/*" hidden>
         <button class="btn btn-sm btn-ghost" type="button" id="edImgDel" hidden>Quitar</button>
       </div>
-      <span class="label">Foto con modelo (opcional)</span>
+      <span class="label">Foto para la tarjeta de portada (opcional)</span>
       <div class="photo-row">
         <img id="edModel" alt="" hidden>
-        <label class="btn btn-sm btn-outline" for="edModelFile">Subir foto con modelo</label>
+        <label class="btn btn-sm btn-outline" for="edModelFile">Subir foto</label>
         <input id="edModelFile" type="file" accept="image/*" hidden>
         <button class="btn btn-sm btn-ghost" type="button" id="edModelDel" hidden>Quitar</button>
       </div>
-      <p class="form-help">Una foto vertical de cuerpo completo, ideal en PNG sin fondo. Reemplaza al maniquí en la portada.</p>
+      <p class="form-help">Una foto vertical de la prenda o de alguien usándola. Se muestra en la tarjeta de la rueda de portada.</p>
       <div class="two">
         <div><label for="edBadge">Etiqueta (opcional)</label><input id="edBadge" type="text" placeholder="Ej. Nuevo"></div>
         <div><label for="edSort">Orden</label><input id="edSort" type="number" inputmode="numeric"></div>
@@ -354,6 +330,9 @@
     <p class="form-help">Sin logo se muestra el nombre del negocio.</p>
     <label for="pgName">Nombre del negocio</label>
     <input id="pgName" type="text">
+    <label for="pgWord">Palabra grande de la portada</label>
+    <input id="pgWord" type="text" maxlength="12" placeholder="BORDEC">
+    <p class="form-help">Máximo 12 letras. Es la palabra que gira en la portada.</p>
     <label for="pgWa">WhatsApp para pedidos</label>
     <input id="pgWa" type="tel" inputmode="tel" placeholder="10 dígitos, ej. 2461234567">
     <div class="two">

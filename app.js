@@ -21,6 +21,7 @@ const DEF = {
   hero_title: 'Ropa con puntada propia.',
   hero_text: 'Playeras, sudaderas, polos y uniformes con bordado o estampado DTF. Elige un diseño de la temporada, tu talla y tu color.',
   season_word: 'Temporada 26',
+  hero_word: 'BORDEC', hero_kicker: 'Bienvenido al taller',
   catalog_title: 'Catálogo',
   catalog_text: 'Precios por pieza en MXN. El precio de mayoreo se aplica solo en tu bolsa al llegar a la cantidad mínima.',
   steps_title: 'Cómo pedir',
@@ -133,24 +134,6 @@ function garmentSVG(p, opt = {}) {
   return wrap(opt.bare ? body : `${hanger}${extra ? '' : ''}${body}${bar}`);
 }
 
-/* Stylised mannequin wearing the garment */
-function modelSVG(p, color) {
-  const arm = `<path d="M100 176 C90 250 86 350 88 452 L113 456 C117 372 121 286 130 204 Z" fill="url(#skin)"/><ellipse cx="100" cy="474" rx="12" ry="22" fill="url(#skin)"/>`;
-  const garment = isApparel(p) ? `<g transform="translate(75 92) scale(1.25)">${garmentSVG(p, { bare: true, color })}</g>`
-    : `<g transform="translate(110 210) scale(.9)">${garmentSVG(p, { bare: true })}</g>`;
-  return `<svg class="fig-in" viewBox="0 0 400 850" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Modelo con ${esc(p.name)}">
-    <g>${arm}</g><g transform="translate(400 0) scale(-1 1)">${arm}</g>
-    <path d="M136 396 H200 V470 L195 810 H156 Z" fill="#0b0b0b" stroke="#3a3a3a" stroke-width="1.5"/>
-    <path d="M200 396 H264 L244 810 H205 L200 470 Z" fill="#0b0b0b" stroke="#3a3a3a" stroke-width="1.5"/>
-    <path d="M178 480 L176 800 M222 480 L226 800" stroke="#262626" stroke-width="2"/>
-    <rect x="146" y="804" width="58" height="26" rx="12" fill="#f4f4f4"/><rect x="146" y="824" width="58" height="8" rx="4" fill="#9b9b9b"/>
-    <rect x="198" y="804" width="58" height="26" rx="12" fill="#f4f4f4"/><rect x="198" y="824" width="58" height="8" rx="4" fill="#9b9b9b"/>
-    ${garment}
-    <path d="M183 112 H217 V160 Q200 172 183 160 Z" fill="url(#skin)"/>
-    <ellipse cx="200" cy="70" rx="38" ry="48" fill="url(#headShade)"/>
-  </svg>`;
-}
-
 /* ---------------- Settings / text ---------------- */
 function applySettings() {
   $$('[data-k]').forEach(el => { if (document.activeElement !== el) el.textContent = S[el.dataset.k] ?? DEF[el.dataset.k] ?? ''; });
@@ -189,82 +172,106 @@ function renderFacts() {
   ].map(([c, b, s]) => `<div class="fact ${c}"><b>${esc(b)}</b><span>${esc(s)}</span></div>`).join('');
 }
 
-/* ---------------- Studio: deck + model + panel ---------------- */
-const deck = $('#deck');
-let SL = [];             // season list
-let f = 0;               // continuous deck position
-let curId = null;
-const st = { size: null, color: 0, qty: 1 };
+/* ---------------- Hero: rolling word + card wheel ---------------- */
+const wheel = $('#wheel'), wcards = $('#wheelCards');
+const TONES = ['light', 'black', 'white', 'graphite', 'red', 'light', 'gray', 'black', 'white', 'blue', 'graphite', 'light'];
+let SL = [], f = 0, curId = null, lastUser = -1e9, hovering = false;
 const mod = (a, n) => ((a % n) + n) % n;
 const idxOf = () => SL.length ? mod(Math.round(f), SL.length) : 0;
+const stepDeg = () => innerWidth < 700 ? 24 : 19;
+const radius = () => parseFloat(getComputedStyle(wheel).getPropertyValue('--R')) || 600;
 
-function renderStudio(keepId) {
+function renderRoll() {
+  const w = String(S.hero_word || DEF.hero_word).toUpperCase().slice(0, 12);
+  $('#rollWord').innerHTML = [...w].map((c, i) => c === ' ' ? `<span class="ch" style="--i:${i}">&nbsp;</span>`
+    : `<span class="ch" style="--i:${i}"><span class="fc">${esc(c)}</span><span class="fc f1 outline">${esc(c)}</span><span class="fc f2">${esc(c)}</span><span class="fc f3 outline">${esc(c)}</span></span>`).join('');
+  $('#heroTitle').setAttribute('aria-label', S.name || DEF.name);
+  $('#ringText').textContent = (`${S.name || DEF.name} • ${S.season_word || DEF.season_word} • `).toUpperCase().repeat(2);
+}
+function renderWheel(keepId) {
   SL = P.filter(p => p.in_season && isApparel(p) && (p.visible || (editing && !preview))).sort(bySort);
-  if (!SL.length) SL = P.filter(p => isApparel(p) && p.visible).sort(bySort).slice(0, 8);
-  deck.innerHTML = SL.map((p, i) => `<button class="dcard" type="button" role="option" data-i="${i}" aria-label="${esc(p.name)}, ${priceLabel(p)}">
-      <span class="dcard-vis">${garmentSVG(p)}</span>
-      <span class="dcard-info"><span class="dcard-name">${esc(p.name)}</span><span class="dcard-price">${priceLabel(p)}</span></span>
-    </button>`).join('');
+  if (!SL.length) SL = P.filter(p => isApparel(p) && p.visible).sort(bySort).slice(0, 10);
+  wcards.innerHTML = SL.map((p, i) => {
+    const vis = p.model_url ? `<span class="wcard-vis photo"><img src="${esc(p.model_url)}" alt="" loading="lazy"></span>` : `<span class="wcard-vis">${garmentSVG(p)}</span>`;
+    return `<button class="wcard" type="button" role="option" data-i="${i}" data-tone="${TONES[i % TONES.length]}" aria-label="${esc(p.name)}, ${priceLabel(p)}"><span class="wcard-in">${vis}<span class="wcard-lab"><span>${esc(p.name)}</span><span>${priceLabel(p)}</span></span></span></button>`;
+  }).join('');
   const k = keepId ? SL.findIndex(p => p.id === keepId) : -1;
   f = k >= 0 ? k : 0;
-  $('#stOf').textContent = '/ ' + String(SL.length).padStart(2, '0');
-  layout();
-  select(true);
+  layoutW(true); selectW(true);
 }
-function layout() {
-  const n = SL.length, cards = deck.children, mobile = innerWidth < 700;
+function layoutW(instant) {
+  const n = SL.length, st = stepDeg(), cards = wcards.children;
   for (let i = 0; i < cards.length; i++) {
     let d = i - f; if (n > 4) d = mod(d + n / 2, n) - n / 2;
-    const a = Math.abs(d), s = Math.sign(d);
-    const y = s * (Math.min(a, 1) * (mobile ? 64 : 60) + Math.max(a - 1, 0) * (mobile ? 40 : 38));
-    const rot = s * Math.min(a, 2.4) * (mobile ? 24 : 26);
-    const sc = 1 - Math.min(a, 3) * .07;
-    const op = a > 2.6 ? 0 : a > 1.8 ? 1 - (a - 1.8) * 1.25 : 1;
-    const c = cards[i];
-    c.style.transform = `translateY(${y.toFixed(2)}%) translateZ(${(-a * 60).toFixed(1)}px) rotateX(${rot.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
-    c.style.opacity = op.toFixed(3);
-    c.style.filter = RM.matches || a < .5 ? 'none' : `blur(${Math.min(a, 2) * 1.4}px)`;
+    const ang = d * st, a = Math.abs(d), c = cards[i];
+    const prev = parseFloat(c.dataset.ang);
+    const jump = instant || (!isNaN(prev) && Math.abs(prev - ang) > 120);
+    if (jump) c.style.transition = 'none';
+    c.style.transform = `rotate(${ang.toFixed(2)}deg)`;
+    c.dataset.ang = ang;
+    if (jump) { void c.offsetWidth; c.style.transition = ''; }
     c.style.zIndex = String(100 - Math.round(a * 10));
-    c.style.pointerEvents = op < .2 ? 'none' : '';
-    c.tabIndex = a < .5 ? 0 : -1;
+    c.style.visibility = Math.abs(ang) > 104 ? 'hidden' : '';
     c.classList.toggle('is-active', a < .5);
     c.setAttribute('aria-selected', a < .5 ? 'true' : 'false');
+    c.tabIndex = a < .5 ? 0 : -1;
   }
+}
+function selectW(force) {
+  const p = SL[idxOf()];
+  if (!p) { $('#wName').textContent = 'Pronto habrá diseños aquí'; $('#wPrice').textContent = ''; $('#wOpen').hidden = true; return; }
+  if (!force && p.id === curId) return;
+  curId = p.id; $('#wOpen').hidden = false;
+  $('#wName').textContent = p.name;
+  $('#wPrice').textContent = `${priceLabel(p)}${p.wholesale_price && p.wholesale_min ? ` · mayoreo ${fmt(p.wholesale_price)} desde ${p.wholesale_min} pzs` : ''}`;
 }
 function goTo(i) {
   if (!SL.length) return;
   const n = SL.length; let delta = mod(i - f, n); if (delta > n / 2) delta -= n;
-  f = Math.round(f + delta); layout(); select();
+  f = Math.round(f + delta); layoutW(); selectW();
 }
-const step = dir => { f = Math.round(f) + dir; layout(); select(); };
+const stepW = dir => { f = Math.round(f) + dir; layoutW(); selectW(); };
+const touch = () => { lastUser = performance.now(); };
 
-function select(force) {
-  const p = SL[idxOf()]; if (!p) { $('#stName').textContent = 'Pronto habrá diseños aquí'; return; }
-  if (!force && p.id === curId) return;
-  curId = p.id; st.size = null; st.color = 0;
-  const inBag = bag.find(b => b.id === p.id); st.qty = 1;
-  $('#stIdx').textContent = String(idxOf() + 1).padStart(2, '0');
-  $('#stCat').textContent = p.category;
-  $('#stName').textContent = p.name;
-  $('#stPrice').textContent = priceLabel(p);
-  $('#stWs').textContent = p.wholesale_price && p.wholesale_min ? `Mayoreo ${fmt(p.wholesale_price)} c/u desde ${p.wholesale_min} pzs` : '';
-  $('#stQty').value = st.qty;
-  renderOptions('st', p, st);
-  drawModel(p);
-  stTotals();
-  void inBag;
-}
-function drawModel(p) {
-  const fig = $('#stageFig'), col = colorsOf(p)[st.color];
-  if (p.model_url) {
-    fig.innerHTML = `<img class="fig-in" src="${esc(p.model_url)}" alt="Modelo con ${esc(p.name)}">`;
-    $('#stageNote').hidden = true;
-  } else {
-    fig.innerHTML = modelSVG(p, col ? col.h : p.color);
-    $('#stageNote').hidden = false;
-  }
-}
-/* sizes + colors renderer shared by the studio panel and the product dialog */
+const drag = { on: false, x: 0, f0: 0, moved: false, id: null, t: 0, lx: 0, v: 0 };
+wheel.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || !SL.length || e.target.closest('.wheel-pointer')) return;
+  Object.assign(drag, { on: true, x: e.clientX, f0: f, moved: false, id: e.pointerId, t: performance.now(), lx: e.clientX, v: 0 }); touch();
+});
+wheel.addEventListener('pointermove', e => {
+  if (!drag.on || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x;
+  if (!drag.moved && Math.abs(dx) > 6) { drag.moved = true; wheel.classList.add('dragging'); try { wheel.setPointerCapture(e.pointerId); } catch (_) {} }
+  if (!drag.moved) return;
+  const now = performance.now(); drag.v = (e.clientX - drag.lx) / Math.max(1, now - drag.t); drag.lx = e.clientX; drag.t = now;
+  f = drag.f0 - dx / (radius() * stepDeg() * Math.PI / 180); layoutW(true);
+});
+wheel.addEventListener('pointerup', e => {
+  if (!drag.on) return; drag.on = false; wheel.classList.remove('dragging'); touch();
+  if (drag.moved) { f = Math.round(f - Math.max(-2, Math.min(2, drag.v * 1.5))); layoutW(); selectW(); return; }
+  const c = e.target.closest('.wcard'); if (!c) return;
+  const i = +c.dataset.i;
+  if (i === idxOf()) openProduct(SL[i].id); else goTo(i);
+});
+wheel.addEventListener('pointercancel', () => { if (drag.on) { drag.on = false; wheel.classList.remove('dragging'); f = Math.round(f); layoutW(); selectW(); } });
+wheel.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') { stepW(1); touch(); e.preventDefault(); }
+  if (e.key === 'ArrowLeft') { stepW(-1); touch(); e.preventDefault(); }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.wcard')) { e.preventDefault(); openProduct(SL[idxOf()].id); }
+});
+wheel.addEventListener('pointerenter', () => { hovering = true; });
+wheel.addEventListener('pointerleave', () => { hovering = false; });
+$('#wPrev').addEventListener('click', () => { stepW(-1); touch(); });
+$('#wNext').addEventListener('click', () => { stepW(1); touch(); });
+$('#wOpen').addEventListener('click', () => { if (curId) openProduct(curId); });
+setInterval(() => {
+  if (RM.matches || hovering || drag.on || document.hidden || $('dialog[open]') || editing) return;
+  if (performance.now() - lastUser < 9000 || SL.length < 2) return;
+  stepW(1);
+}, 3400);
+addEventListener('resize', () => layoutW(true));
+
+/* sizes + colors renderer for the product dialog */
 function renderOptions(prefix, p, state) {
   const sizes = sizesOf(p), cols = colorsOf(p);
   if (!state.size || !sizes.includes(state.size)) state.size = sizes.includes('M') ? 'M' : sizes[0];
@@ -274,59 +281,6 @@ function renderOptions(prefix, p, state) {
   $(`#${prefix}Colors`).innerHTML = cols.map((c, i) => `<button type="button" class="cswatch" role="radio" aria-checked="${i === state.color}" aria-label="${esc(c.n)}" title="${esc(c.n)}" data-color="${i}" style="background:${c.h}"></button>`).join('');
   $(`#${prefix}ColorName`).textContent = cols[state.color] ? cols[state.color].n : '';
 }
-function stTotals() {
-  const p = SL[idxOf()]; if (!p) return;
-  const q = st.qty = Math.max(1, parseInt($('#stQty').value, 10) || 1);
-  if (Number(p.price) > 0) { const u = unitPrice(p, q); $('#stTotal').textContent = `${q} × ${fmt(u)} = ${fmt(u * q)}${u < p.price ? ' · mayoreo' : ''}`; }
-  else $('#stTotal').textContent = 'Precio a cotizar';
-  const c = colorsOf(p)[st.color];
-  const wa = waLink(`Hola ${S.name}, me interesa: ${q} × ${p.name}${st.size ? `, talla ${st.size}` : ''}${c ? `, color ${c.n}` : ''}. ¿Me das más información?`);
-  const a = $('#stWa'); if (wa) { a.href = wa; a.removeAttribute('aria-disabled'); } else { a.href = '#contacto'; }
-}
-$('#stSizes').addEventListener('click', e => { const b = e.target.closest('[data-size]'); if (!b) return; st.size = b.dataset.size; renderOptions('st', SL[idxOf()], st); stTotals(); });
-$('#stColors').addEventListener('click', e => { const b = e.target.closest('[data-color]'); if (!b) return; st.color = +b.dataset.color; const p = SL[idxOf()]; renderOptions('st', p, st); drawModel(p); stTotals(); });
-$('#stQty').addEventListener('input', stTotals);
-$('#stMinus').addEventListener('click', () => { $('#stQty').value = Math.max(1, (+$('#stQty').value || 1) - 1); stTotals(); });
-$('#stPlus').addEventListener('click', () => { $('#stQty').value = (+$('#stQty').value || 0) + 1; stTotals(); });
-$('#stAdd').addEventListener('click', () => { const p = SL[idxOf()]; if (p) addToBag(p, st.qty, st.size, colorsOf(p)[st.color]); });
-$('#stWa').addEventListener('click', e => { if (!waNumber()) { e.preventDefault(); toast(isAdmin ? 'Agrega tu WhatsApp en «Logo y contacto».' : 'Pronto podrás pedir por WhatsApp desde aquí.', true); } });
-
-/* deck interaction: drag, click, wheel, keys */
-const drag = { on: false, y: 0, f0: 0, moved: false, id: null, t: 0, ly: 0, v: 0 };
-const stepPx = () => (deck.firstElementChild ? deck.firstElementChild.offsetHeight : 280) * .6;
-deck.addEventListener('pointerdown', e => {
-  if (e.button !== 0 || !SL.length) return;
-  Object.assign(drag, { on: true, y: e.clientY, f0: f, moved: false, id: e.pointerId, t: performance.now(), ly: e.clientY, v: 0 });
-});
-deck.addEventListener('pointermove', e => {
-  if (!drag.on || e.pointerId !== drag.id) return;
-  const dy = e.clientY - drag.y;
-  if (!drag.moved && Math.abs(dy) > 6) { drag.moved = true; deck.classList.add('dragging'); try { deck.setPointerCapture(e.pointerId); } catch (_) {} }
-  if (!drag.moved) return;
-  const now = performance.now(); drag.v = (e.clientY - drag.ly) / Math.max(1, now - drag.t); drag.ly = e.clientY; drag.t = now;
-  f = drag.f0 - dy / stepPx(); layout();
-});
-const endDrag = e => {
-  if (!drag.on) return; drag.on = false; deck.classList.remove('dragging');
-  if (drag.moved) { f = Math.round(f - Math.max(-1.5, Math.min(1.5, drag.v * 1.2))); layout(); select(); }
-  else { const c = e && e.target.closest && e.target.closest('.dcard'); if (c) { const i = +c.dataset.i; if (i === idxOf()) { $('#stAdd').focus({ preventScroll: true }); } goTo(i); } }
-};
-deck.addEventListener('pointerup', endDrag);
-deck.addEventListener('pointercancel', () => { if (drag.on) { drag.on = false; deck.classList.remove('dragging'); f = Math.round(f); layout(); select(); } });
-let wheelAcc = 0, wheelLock = 0;
-deck.addEventListener('wheel', e => {
-  if (!SL.length) return; e.preventDefault();
-  const now = performance.now(); wheelAcc += e.deltaY;
-  if (now > wheelLock && Math.abs(wheelAcc) > 30) { step(Math.sign(wheelAcc)); wheelAcc = 0; wheelLock = now + 280; }
-}, { passive: false });
-deck.addEventListener('keydown', e => {
-  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { step(1); e.preventDefault(); }
-  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { step(-1); e.preventDefault(); }
-  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.dcard')) { e.preventDefault(); goTo(+e.target.closest('.dcard').dataset.i); }
-});
-$('#deckPrev').addEventListener('click', () => step(-1));
-$('#deckNext').addEventListener('click', () => step(1));
-addEventListener('resize', () => layout());
 
 /* ---------------- Catalog ---------------- */
 function renderCatalog() {
@@ -369,8 +323,6 @@ let cur = null; const pd = { size: null, color: 0 };
 function openProduct(id) {
   if (editing && !preview) return openEditor(id);
   const p = P.find(x => x.id === id); if (!p) return;
-  const si = SL.findIndex(x => x.id === id);
-  if (si >= 0) { goTo(si); $('#temporada').scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth', block: 'start' }); return; }
   cur = p; pd.size = null; pd.color = 0;
   $('#pdVisual').innerHTML = garmentSVG(p);
   $('#pdCat').textContent = p.category; $('#pdName').textContent = p.name;
@@ -464,7 +416,7 @@ async function load() {
   P = (p.data || []).map(norm);
   renderAll();
 }
-function renderAll() { applySettings(); renderFacts(); renderStudio(curId); renderCatalog(); renderBag(); }
+function renderAll() { applySettings(); renderRoll(); renderFacts(); renderWheel(curId); renderCatalog(); renderBag(); }
 
 /* ---------------- Admin: auth ---------------- */
 async function checkSession() {
@@ -478,7 +430,7 @@ function setAdmin(on) {
   $('#adminbar').hidden = !on;
   $('#adminLink').textContent = on ? 'Estás en modo edición' : 'Acceso para el taller';
   $$('[data-k]').forEach(el => editing ? bindEditable(el) : unbindEditable(el));
-  if (P.length || on) { renderStudio(curId); renderCatalog(); applySettings(); updateSend(); }
+  if (P.length || on) { renderWheel(curId); renderCatalog(); applySettings(); updateSend(); }
 }
 $('#adminLink').addEventListener('click', () => { if (!isAdmin) { $('#lgErr').hidden = true; $('#dlgLogin').showModal(); } });
 if (location.hash === '#admin') setTimeout(() => !isAdmin && $('#dlgLogin').showModal(), 400);
@@ -524,7 +476,7 @@ async function saveSettings(patch) {
   const next = { ...S, ...patch };
   const { error } = await sb.from('web_settings').upsert({ id: 1, data: next, updated_at: new Date().toISOString() });
   if (error) { toast('No se guardó el cambio. Revisa tu conexión e inténtalo otra vez.', true); return false; }
-  S = next; applySettings(); updateSend(); stTotals(); toast('Cambio guardado'); return true;
+  S = next; applySettings(); renderRoll(); updateSend(); toast('Cambio guardado'); return true;
 }
 
 /* ---------------- Admin: images ---------------- */
@@ -584,7 +536,7 @@ function readEditor() {
   ed.badge = $('#edBadge').value.trim(); ed.sort = parseInt($('#edSort').value, 10) || 0;
   ed.in_season = $('#edSeason').checked; ed.visible = $('#edVisible').checked;
 }
-function edPreview() { const p = { ...ed, name: ed.name || 'Prenda' }; $('#edPreview').innerHTML = p.model_url ? `<img src="${esc(p.model_url)}" alt="">` : (isApparel(p) ? modelSVG(p, p.color) : garmentSVG(p)); }
+function edPreview() { const p = { ...ed, name: ed.name || 'Prenda' }; $('#edPreview').innerHTML = garmentSVG(p); }
 function edImgs() {
   const a = $('#edImg'); a.hidden = !ed.image_url; if (ed.image_url) a.src = ed.image_url; $('#edImgDel').hidden = !ed.image_url;
   const b = $('#edModel'); b.hidden = !ed.model_url; if (ed.model_url) b.src = ed.model_url; $('#edModelDel').hidden = !ed.model_url;
@@ -616,7 +568,7 @@ $('#edForm').addEventListener('submit', async e => {
   $('#edSave').textContent = 'Guardar prenda';
   if (error) { $('#edErr').hidden = false; $('#edErr').textContent = 'No se guardó. Revisa tu conexión e inténtalo otra vez.'; return; }
   const n = norm(data); const i = P.findIndex(x => x.id === n.id); if (i >= 0) P[i] = n; else P.push(n);
-  $('#dlgEdit').close(); renderFacts(); renderStudio(n.id); renderCatalog(); toast(`Guardaste «${n.name}»`);
+  $('#dlgEdit').close(); renderFacts(); renderWheel(n.id); renderCatalog(); toast(`Guardaste «${n.name}»`);
 });
 $('#edDel').addEventListener('click', () => { $('#edConfirmText').textContent = `¿Eliminar «${ed.name}» de la página? No se borra de tu dashboard.`; $('#edConfirm').hidden = false; $('#edDelYes').focus(); });
 $('#edDelNo').addEventListener('click', () => { $('#edConfirm').hidden = true; });
@@ -627,13 +579,12 @@ $('#edDelYes').addEventListener('click', async () => {
   $('#dlgEdit').close(); renderAll(); toast(`Eliminaste «${ed.name}»`);
 });
 $('#aNew').addEventListener('click', () => openEditor(null));
-$('#stage').addEventListener('click', () => { if (editing && !preview && curId) openEditor(curId); });
 
 /* ---------------- Admin: page settings ---------------- */
 let pgLogo = '';
 $('#aPage').addEventListener('click', () => {
   pgLogo = S.logo_url || '';
-  $('#pgName').value = S.name || ''; $('#pgWa').value = S.whatsapp || ''; $('#pgIg').value = S.instagram || ''; $('#pgFb').value = S.facebook || '';
+  $('#pgName').value = S.name || ''; $('#pgWord').value = S.hero_word || DEF.hero_word; $('#pgWa').value = S.whatsapp || ''; $('#pgIg').value = S.instagram || ''; $('#pgFb').value = S.facebook || '';
   $('#pgTk').value = S.tiktok || ''; $('#pgEmail').value = S.email || ''; $('#pgLoc').value = S.location || ''; $('#pgHours').value = S.hours || '';
   $('#pgErr').hidden = true; pgLogoShow(); $('#dlgPage').showModal();
 });
@@ -650,7 +601,7 @@ $('#pgWa').addEventListener('blur', () => { $('#pgErr').hidden = !waBad(); $('#p
 $('#pgForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (waBad()) { $('#pgErr').hidden = false; $('#pgErr').textContent = 'El número de WhatsApp debe tener 10 dígitos (o 12 con el 52 de México).'; $('#pgWa').focus(); return; }
-  const ok = await saveSettings({ logo_url: pgLogo, name: $('#pgName').value.trim() || DEF.name, whatsapp: $('#pgWa').value.trim(), instagram: $('#pgIg').value.trim(), facebook: $('#pgFb').value.trim(), tiktok: $('#pgTk').value.trim(), email: $('#pgEmail').value.trim(), location: $('#pgLoc').value.trim(), hours: $('#pgHours').value.trim() });
+  const ok = await saveSettings({ logo_url: pgLogo, name: $('#pgName').value.trim() || DEF.name, hero_word: ($('#pgWord').value.trim() || DEF.hero_word).slice(0, 12), whatsapp: $('#pgWa').value.trim(), instagram: $('#pgIg').value.trim(), facebook: $('#pgFb').value.trim(), tiktok: $('#pgTk').value.trim(), email: $('#pgEmail').value.trim(), location: $('#pgLoc').value.trim(), hours: $('#pgHours').value.trim() });
   if (ok) $('#dlgPage').close();
 });
 
@@ -693,7 +644,7 @@ $('#aImport').addEventListener('click', async () => {
 });
 
 /* ---------------- Boot ---------------- */
-RM.addEventListener?.('change', layout);
+RM.addEventListener?.('change', () => layoutW(true));
 renderAll();
 load().then(checkSession);
 sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT' && isAdmin) setAdmin(false); });
