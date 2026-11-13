@@ -17,9 +17,9 @@
   --purple: #a74dff;
   --green: #14d600;
 
-  --f-display: "Anton", "Arial Narrow", Impact, system-ui, sans-serif;
-  --f-body: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --f-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --f-display: "Clash Display", "Kanit", system-ui, sans-serif;
+  --f-body: "Kanit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "Kanit", system-ui, sans-serif;
 
   --t-meta: .75rem;
   --t-2: .875rem;
@@ -356,6 +356,36 @@ body.editing [data-k]:focus { outline: 2px solid var(--blue); }
 /* ---------- Toast ---------- */
 .toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--black); color: var(--white); padding: 12px 18px; border-radius: 14px; font-size: var(--t-2); max-width: calc(100vw - 32px); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
 .toast.err { background: var(--red); }
+
+/* ---------- Typography: Clash Display (titles, subtitles, highlights) + Kanit (everything else) ---------- */
+body { font-weight: 300; }
+strong, b { font-weight: 500; }
+.wordmark, .hero-kicker, .roll, .wp-name, .fact b, .big, .card-price, .step-n, .foot-giant,
+.drawer-head h3, .pd-info h3, .pd-price > span:first-child, .bag-total b, .hl { font-family: var(--f-display); font-weight: 600; }
+.wordmark { font-size: clamp(1.125rem, .9rem + .8vw, 1.375rem); letter-spacing: .01em; word-spacing: .12em; }
+.hero-red { top: -24px; bottom: -10px; }
+.hero-kicker { font-size: clamp(1rem, .85rem + .6vw, 1.25rem); line-height: 1.05; }
+.roll { font-size: clamp(3rem, 1.2rem + 7.4vw, 8.5rem); line-height: .9; letter-spacing: -.03em; }
+.ch, .fc { height: .9em; }
+.fc { transform: translateZ(.45em); }
+.fc.f1 { transform: rotateX(-90deg) translateZ(.45em); }
+.fc.f2 { transform: rotateX(-180deg) translateZ(.45em); }
+.fc.f3 { transform: rotateX(-270deg) translateZ(.45em); }
+.wp-name { font-size: clamp(1rem, .85rem + .6vw, 1.375rem); line-height: 1.1; letter-spacing: -.01em; }
+.fact b { font-size: clamp(2rem, 1.5rem + 1.8vw, 3.25rem); line-height: .95; letter-spacing: -.02em; }
+.big { font-size: clamp(2.25rem, 1.6rem + 3vw, 4.5rem); line-height: .98; letter-spacing: -.025em; }
+.hl { border-radius: 12px; padding: 0 .16em; }
+.card-price { font-size: 1.375rem; letter-spacing: -.01em; }
+.step-n { font-size: 3.5rem; line-height: .9; }
+.foot-giant { font-size: clamp(2.5rem, 10vw, 10rem); line-height: .9; letter-spacing: -.03em; }
+.drawer-head h3, .pd-info h3 { font-size: 1.5rem; line-height: 1.05; letter-spacing: -.01em; }
+.pd-price > span:first-child { font-size: 1.75rem; }
+.bag-total b { font-size: 1.5rem; }
+.box-label, .card-cat, .card-season, .card-badge, .pd-badge, .hero-meta, .wcard-lab, .foot-list dt, .chip .n, .bagcount { font-weight: 500; }
+.btn, .chip, .nav a, .bagbtn { font-weight: 500; }
+.card-name, .bag-name { font-weight: 400; }
+.step p { font-weight: 300; }
+@media (max-width: 699.98px) { .wcard-lab { letter-spacing: .02em; } }
 
 @keyframes fadeOnly { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
