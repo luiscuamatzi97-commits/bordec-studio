@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bordec Studio</title>
-<meta name="description" content="Bordado y estampado DTF: playeras, sudaderas, polos y uniformes. Pide por WhatsApp.">
-<meta name="theme-color" content="#ebebea">
+<meta name="description" content="Bordado y estampado DTF: playeras, sudaderas, polos y uniformes. Elige tu prenda, talla y color y pide por WhatsApp.">
+<meta name="theme-color" content="#0b0b0b">
 <meta property="og:title" content="Bordec Studio">
 <meta property="og:description" content="Bordado y estampado DTF: playeras, sudaderas, polos y uniformes.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="styles.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230e0e0e'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23fff' stroke-width='2' stroke-dasharray='3 2.4'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230b0b0b'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23f4f4f4' stroke-width='2.4' stroke-dasharray='3 2.4'/%3E%3C/svg%3E">
 </head>
 <body>
 <a class="skip" href="#catalogo">Saltar al catálogo</a>
@@ -30,6 +30,15 @@
       <stop offset=".25" stop-color="#000" stop-opacity="0"/>
       <stop offset="1" stop-color="#000" stop-opacity=".1"/>
     </linearGradient>
+    <linearGradient id="skin" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#8f8f8f"/>
+      <stop offset=".45" stop-color="#c9c9c9"/>
+      <stop offset="1" stop-color="#7e7e7e"/>
+    </linearGradient>
+    <radialGradient id="headShade" cx=".38" cy=".32" r=".8">
+      <stop offset="0" stop-color="#dcdcdc"/>
+      <stop offset="1" stop-color="#7a7a7a"/>
+    </radialGradient>
   </defs>
 </svg>
 
@@ -48,62 +57,96 @@
 
 <header class="top" id="top">
   <div class="wrap top-in">
-    <a class="brand" href="#perchero" aria-label="Inicio">
+    <a class="brand" href="#temporada" aria-label="Inicio">
       <img id="logo" alt="" hidden>
       <span id="wordmark" class="wordmark" data-k="name">Bordec Studio</span>
     </a>
     <nav class="nav" aria-label="Secciones">
-      <a href="#perchero">Perchero</a>
+      <a href="#temporada" class="on">Temporada</a>
       <a href="#catalogo">Catálogo</a>
       <a href="#pedir">Cómo pedir</a>
       <a href="#contacto">Contacto</a>
     </nav>
     <button class="bagbtn" id="bagBtn" type="button" aria-label="Abrir bolsa">
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
       <span>Bolsa</span><span class="bagcount" id="bagCount">0</span>
     </button>
   </div>
 </header>
 
 <main id="main">
-  <section class="hero" id="perchero" aria-labelledby="heroTitle">
-    <div class="wrap hero-head">
-      <div class="hero-title">
-        <p class="eyebrow" data-k="eyebrow">Taller de bordado y DTF</p>
-        <h1 id="heroTitle" data-k="hero_title">Ropa con puntada propia.</h1>
-        <div class="stitch" aria-hidden="true"><i></i><i></i><i></i></div>
+  <!-- HERO / STUDIO -->
+  <section class="studio-sec" id="temporada" aria-labelledby="heroTitle">
+    <div class="wrap">
+      <div class="studio-head">
+        <h1 id="heroTitle"><span data-k="hero_title">Ropa con puntada propia.</span></h1>
+        <p class="studio-lead" data-k="hero_text">Playeras, sudaderas, polos y uniformes con bordado o estampado DTF.</p>
       </div>
-      <div class="hero-side">
-        <p class="lead" data-k="hero_text">Playeras, sudaderas, polos y uniformes con bordado o estampado DTF.</p>
-        <dl class="facts" id="facts"></dl>
-        <div class="hero-cta">
-          <a class="btn btn-dark" href="#catalogo">Ver el catálogo</a>
-          <a class="btn btn-wa-outline" id="heroWa" href="#contacto" target="_blank" rel="noopener">Cotizar por WhatsApp</a>
-        </div>
-      </div>
-    </div>
 
-    <div class="rack" id="rack">
-      <div class="rack-scroll" id="rackScroll" tabindex="0" aria-label="Perchero de prendas, desliza para ver más">
-        <div class="rack-track" id="rackTrack">
-          <div class="rail" aria-hidden="true"></div>
+      <div class="studio" id="studio">
+        <p class="studio-bgword" aria-hidden="true" data-k="season_word">Temporada 26</p>
+
+        <!-- Left: options panel -->
+        <aside class="panel" aria-label="Opciones de la prenda">
+          <div class="box box-main">
+            <p class="box-label" id="stCat">Temporada</p>
+            <h2 class="st-name" id="stName">Cargando prendas…</h2>
+            <div class="st-price"><span id="stPrice">—</span><span class="st-ws" id="stWs"></span></div>
+          </div>
+          <div class="box" id="stSizesBox">
+            <p class="box-label">Talla</p>
+            <div class="sizes" id="stSizes" role="radiogroup" aria-label="Talla"></div>
+          </div>
+          <div class="box" id="stColorsBox">
+            <p class="box-label">Color <span class="box-val" id="stColorName"></span></p>
+            <div class="colors" id="stColors" role="radiogroup" aria-label="Color"></div>
+          </div>
+          <div class="box box-buy">
+            <div class="qty-row">
+              <span class="box-label">Cantidad</span>
+              <div class="qty-ctl">
+                <button class="iconbtn dark" type="button" id="stMinus" aria-label="Quitar una">−</button>
+                <input id="stQty" type="number" min="1" value="1" inputmode="numeric" aria-label="Cantidad">
+                <button class="iconbtn dark" type="button" id="stPlus" aria-label="Agregar una">+</button>
+              </div>
+            </div>
+            <p class="st-total" id="stTotal"></p>
+            <button class="btn btn-light btn-block" type="button" id="stAdd">Agregar a la bolsa</button>
+            <a class="btn btn-wa btn-block" id="stWa" href="#contacto" target="_blank" rel="noopener">Pedir por WhatsApp</a>
+          </div>
+        </aside>
+
+        <!-- Center: model -->
+        <div class="stage" id="stage" aria-live="polite">
+          <div class="stage-count"><span id="stIdx">01</span><span class="stage-of" id="stOf">/ 16</span></div>
+          <div class="stage-fig" id="stageFig"></div>
+          <div class="stage-floor" aria-hidden="true"></div>
+          <p class="stage-note" id="stageNote">Maniquí ilustrativo</p>
         </div>
-      </div>
-      <div class="rack-floor" aria-hidden="true"></div>
-    </div>
-    <div class="wrap rack-foot">
-      <p class="rack-caption" id="rackCaption" aria-live="polite"><span data-k="rack_hint">Pasa el cursor o desliza el perchero. Toca una prenda para verla.</span></p>
-      <div class="rack-ctrl">
-        <button class="iconbtn" id="rackPrev" type="button" aria-label="Prendas anteriores"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
-        <button class="iconbtn" id="rackNext" type="button" aria-label="Más prendas"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+
+        <!-- Right: perspective stack -->
+        <div class="deck-wrap">
+          <div class="deck" id="deck" tabindex="0" role="listbox" aria-label="Diseños de la temporada. Arrastra, desliza o usa las flechas."></div>
+          <div class="deck-ctrl">
+            <button class="iconbtn dark" id="deckPrev" type="button" aria-label="Diseño anterior"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+            <span class="deck-hint">Arrastra o toca</span>
+            <button class="iconbtn dark" id="deckNext" type="button" aria-label="Siguiente diseño"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
+  <!-- FACTS -->
+  <section class="facts-sec" aria-label="Datos del taller">
+    <div class="wrap facts" id="facts"></div>
+  </section>
+
+  <!-- CATALOG -->
   <section class="catalog" id="catalogo" aria-labelledby="catTitle">
     <div class="wrap">
       <div class="sec-head">
-        <h2 id="catTitle" data-k="catalog_title">Catálogo</h2>
+        <h2 id="catTitle" class="big"><span data-k="catalog_title">Catálogo</span> <mark class="hl">completo</mark></h2>
         <p class="sec-text" data-k="catalog_text">Precios por pieza en MXN.</p>
       </div>
       <div class="chips" id="chips" role="toolbar" aria-label="Filtrar por categoría"></div>
@@ -113,44 +156,49 @@
     </div>
   </section>
 
+  <!-- HOW TO -->
   <section class="howto" id="pedir" aria-labelledby="stepsTitle">
     <div class="wrap">
-      <h2 id="stepsTitle" data-k="steps_title">Cómo pedir</h2>
+      <h2 id="stepsTitle" class="big light"><span data-k="steps_title">Cómo pedir</span></h2>
       <ol class="steps">
-        <li><span class="step-n">1</span><p data-k="step1">Arma tu bolsa.</p></li>
-        <li><span class="step-n">2</span><p data-k="step2">Envíanos tu pedido por WhatsApp.</p></li>
-        <li><span class="step-n">3</span><p data-k="step3">Aprobamos el boceto y producimos.</p></li>
+        <li class="step"><span class="step-n">01</span><p data-k="step1">Arma tu bolsa.</p></li>
+        <li class="step"><span class="step-n">02</span><p data-k="step2">Envíanos tu pedido por WhatsApp.</p></li>
+        <li class="step step-accent"><span class="step-n">03</span><p data-k="step3">Aprobamos el boceto y producimos.</p></li>
       </ol>
     </div>
   </section>
 </main>
 
 <footer class="foot" id="contacto">
-  <div class="wrap foot-in">
-    <div class="foot-about">
-      <p class="foot-name" data-k="name">Bordec Studio</p>
-      <p data-k="about">Bordamos y estampamos en nuestro taller.</p>
-      <a class="btn btn-wa" id="footWa" href="#" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>
+  <div class="wrap">
+    <div class="foot-in">
+      <div class="foot-about">
+        <p data-k="about">Bordamos y estampamos en nuestro taller.</p>
+        <a class="btn btn-wa" id="footWa" href="#" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>
+      </div>
+      <dl class="foot-list" id="footList"></dl>
     </div>
-    <dl class="foot-list" id="footList"></dl>
-  </div>
-  <div class="wrap foot-base">
-    <span>© <span id="year"></span> <span data-k="name">Bordec Studio</span></span>
-    <button class="linkbtn" id="adminLink" type="button">Acceso para el taller</button>
+    <p class="foot-giant" aria-hidden="true" data-k="name">Bordec Studio</p>
+    <div class="foot-base">
+      <span>© <span id="year"></span> <span data-k="name">Bordec Studio</span></span>
+      <button class="linkbtn" id="adminLink" type="button">Acceso para el taller</button>
+    </div>
   </div>
 </footer>
 
-<!-- Product detail -->
+<!-- Product detail (catalog items outside the season deck) -->
 <dialog id="dlgProduct" class="dlg dlg-wide" aria-labelledby="pdName">
   <div class="pd">
     <div class="pd-visual" id="pdVisual"></div>
     <div class="pd-info">
       <button class="iconbtn dlg-x" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
-      <p class="pd-cat" id="pdCat"></p>
+      <p class="box-label" id="pdCat"></p>
       <h3 id="pdName"></h3>
       <p class="pd-badge" id="pdBadge" hidden></p>
       <p class="pd-desc" id="pdDesc"></p>
       <div class="pd-price"><span id="pdPrice"></span><span class="pd-ws" id="pdWs"></span></div>
+      <div id="pdSizesBox"><p class="box-label">Talla</p><div class="sizes light" id="pdSizes" role="radiogroup" aria-label="Talla"></div></div>
+      <div id="pdColorsBox"><p class="box-label">Color <span class="box-val" id="pdColorName"></span></p><div class="colors" id="pdColors" role="radiogroup" aria-label="Color"></div></div>
       <div class="qty">
         <label for="pdQty">Cantidad</label>
         <div class="qty-ctl">
@@ -162,7 +210,7 @@
       </div>
       <div class="pd-actions">
         <button class="btn btn-dark" type="button" id="pdAdd">Agregar a la bolsa</button>
-        <a class="btn btn-wa-outline" id="pdWa" href="#" target="_blank" rel="noopener">Preguntar por WhatsApp</a>
+        <a class="btn btn-wa" id="pdWa" href="#" target="_blank" rel="noopener">Preguntar por WhatsApp</a>
       </div>
     </div>
   </div>
@@ -179,8 +227,8 @@
     <div class="bag-foot" id="bagFoot">
       <label for="bagName">Tu nombre</label>
       <input id="bagName" type="text" autocomplete="name">
-      <label for="bagNotes">Tallas, colores y detalles del diseño</label>
-      <textarea id="bagNotes" rows="3" placeholder="Ej. 3 M, 2 L, logo en el pecho izquierdo"></textarea>
+      <label for="bagNotes">Detalles del diseño</label>
+      <textarea id="bagNotes" rows="3" placeholder="Ej. logo en el pecho izquierdo, nombre en la espalda"></textarea>
       <div class="bag-total"><span>Total estimado</span><b id="bagTotal">$0</b></div>
       <p class="bag-note">El total final se confirma por WhatsApp junto con tu diseño.</p>
       <a class="btn btn-wa" id="bagSend" href="#" target="_blank" rel="noopener">Enviar pedido por WhatsApp</a>
@@ -211,7 +259,7 @@
   <form id="edForm" class="ed" novalidate>
     <div class="ed-preview">
       <div id="edPreview"></div>
-      <p class="form-help">Vista previa en el perchero</p>
+      <p class="form-help">Vista previa en la modelo</p>
     </div>
     <div class="ed-fields form">
       <div class="drawer-head">
@@ -233,7 +281,7 @@
             <option value="crewneck">Sudadera sin gorro</option>
             <option value="hoodie">Sudadera con gorro</option>
             <option value="sheet">Hoja (stickers / tatuajes)</option>
-            <option value="photo">Solo la foto, colgada con pinza</option>
+            <option value="photo">Solo la foto</option>
           </select>
         </div>
       </div>
@@ -245,21 +293,33 @@
         <div><label for="edWsMin">Desde (piezas)</label><input id="edWsMin" type="number" min="0" inputmode="numeric"></div>
       </div>
       <p class="form-help">Con precio 0 la prenda se muestra como «Cotizar».</p>
-      <span class="label" id="edColorLbl">Color de la prenda</span>
+      <label for="edSizes">Tallas</label>
+      <input id="edSizes" type="text" placeholder="S, M, L, XL, XXL">
+      <label for="edColors">Colores disponibles</label>
+      <input id="edColors" type="text" placeholder="Negro #141414, Blanco #f1f1f1">
+      <p class="form-help">Separa con comas. Cada color lleva su nombre y su código, por ejemplo «Rojo #ff2525».</p>
+      <span class="label" id="edColorLbl">Color principal de la prenda</span>
       <div class="swatches" id="edSwatches" role="group" aria-labelledby="edColorLbl"></div>
-      <span class="label">Foto o diseño</span>
+      <span class="label">Diseño o estampado</span>
       <div class="photo-row">
         <img id="edImg" alt="" hidden>
-        <label class="btn btn-sm btn-outline" for="edFile">Subir foto</label>
+        <label class="btn btn-sm btn-outline" for="edFile">Subir diseño</label>
         <input id="edFile" type="file" accept="image/*" hidden>
-        <button class="btn btn-sm btn-ghost" type="button" id="edImgDel" hidden>Quitar foto</button>
+        <button class="btn btn-sm btn-ghost" type="button" id="edImgDel" hidden>Quitar</button>
       </div>
-      <p class="form-help">Usa un PNG sin fondo para que el diseño se vea estampado sobre la prenda.</p>
+      <span class="label">Foto con modelo (opcional)</span>
+      <div class="photo-row">
+        <img id="edModel" alt="" hidden>
+        <label class="btn btn-sm btn-outline" for="edModelFile">Subir foto con modelo</label>
+        <input id="edModelFile" type="file" accept="image/*" hidden>
+        <button class="btn btn-sm btn-ghost" type="button" id="edModelDel" hidden>Quitar</button>
+      </div>
+      <p class="form-help">Una foto vertical de cuerpo completo, ideal en PNG sin fondo. Reemplaza al maniquí en la portada.</p>
       <div class="two">
         <div><label for="edBadge">Etiqueta (opcional)</label><input id="edBadge" type="text" placeholder="Ej. Nuevo"></div>
         <div><label for="edSort">Orden</label><input id="edSort" type="number" inputmode="numeric"></div>
       </div>
-      <label class="check"><input id="edRack" type="checkbox"> Colgar en el perchero</label>
+      <label class="check"><input id="edSeason" type="checkbox"> Mostrar en la portada (temporada)</label>
       <label class="check"><input id="edVisible" type="checkbox"> Visible en la página</label>
       <p class="form-err" id="edErr" hidden></p>
       <div class="ed-actions">
