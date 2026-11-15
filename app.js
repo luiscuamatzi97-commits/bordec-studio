@@ -310,7 +310,7 @@ function card(p) {
   return `<article class="card">
     <div class="card-visual" data-open="${p.id}" role="button" tabindex="0" aria-label="Ver ${esc(p.name)}">
       ${p.badge ? `<span class="card-badge">${esc(p.badge)}</span>` : ''}${p.collection ? `<span class="card-season">${esc((COLS.find(c => c.slug === p.collection) || {}).title || '')}</span>` : ''}${p.visible ? '' : '<span class="card-hidden">Oculta</span>'}
-      ${garmentSVG(p)}
+      ${p.model_url ? `<img class="card-photo" src="${esc(p.model_url)}" alt="${esc(p.name)}" loading="lazy">` : garmentSVG(p)}
     </div>
     <div class="card-body">
       <span class="card-cat">${esc(p.category)}</span>
@@ -334,7 +334,7 @@ function openProduct(id) {
   if (editing && !preview) return openEditor(id);
   const p = P.find(x => x.id === id); if (!p) return;
   cur = p; pd.size = null; pd.color = 0;
-  $('#pdVisual').innerHTML = garmentSVG(p);
+  $('#pdVisual').innerHTML = p.model_url ? `<img class="pd-photo" src="${esc(p.model_url)}" alt="${esc(p.name)}">` : garmentSVG(p);
   $('#pdCat').textContent = p.category; $('#pdName').textContent = p.name;
   $('#pdBadge').hidden = !p.badge; $('#pdBadge').textContent = p.badge || '';
   $('#pdDesc').textContent = p.description || '';
@@ -351,7 +351,7 @@ function pdTotal() {
   $('#pdWa').hidden = !wa; if (wa) $('#pdWa').href = wa;
 }
 $('#pdSizes').addEventListener('click', e => { const b = e.target.closest('[data-size]'); if (!b) return; pd.size = b.dataset.size; renderOptions('pd', cur, pd); pdTotal(); });
-$('#pdColors').addEventListener('click', e => { const b = e.target.closest('[data-color]'); if (!b) return; pd.color = +b.dataset.color; renderOptions('pd', cur, pd); $('#pdVisual').innerHTML = garmentSVG(cur, { color: colorsOf(cur)[pd.color].h }); pdTotal(); });
+$('#pdColors').addEventListener('click', e => { const b = e.target.closest('[data-color]'); if (!b) return; pd.color = +b.dataset.color; renderOptions('pd', cur, pd); if (!cur.model_url) $('#pdVisual').innerHTML = garmentSVG(cur, { color: colorsOf(cur)[pd.color].h }); pdTotal(); });
 $('#pdQty').addEventListener('input', pdTotal);
 $('#pdMinus').addEventListener('click', () => { $('#pdQty').value = Math.max(1, (+$('#pdQty').value || 1) - 1); pdTotal(); });
 $('#pdPlus').addEventListener('click', () => { $('#pdQty').value = (+$('#pdQty').value || 0) + 1; pdTotal(); });
@@ -567,7 +567,7 @@ function readEditor() {
   ed.badge = $('#edBadge').value.trim(); ed.sort = parseInt($('#edSort').value, 10) || 0;
   ed.collection = $('#edCollection').value || null; ed.visible = $('#edVisible').checked;
 }
-function edPreview() { const p = { ...ed, name: ed.name || 'Prenda' }; $('#edPreview').innerHTML = garmentSVG(p); }
+function edPreview() { const p = { ...ed, name: ed.name || 'Prenda' }; $('#edPreview').innerHTML = p.model_url ? `<img class="pd-photo" src="${esc(p.model_url)}" alt="">` : garmentSVG(p); }
 function edImgs() {
   const a = $('#edImg'); a.hidden = !ed.image_url; if (ed.image_url) a.src = ed.image_url; $('#edImgDel').hidden = !ed.image_url;
   const b = $('#edModel'); b.hidden = !ed.model_url; if (ed.model_url) b.src = ed.model_url; $('#edModelDel').hidden = !ed.model_url;
