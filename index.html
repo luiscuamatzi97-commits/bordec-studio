@@ -60,16 +60,24 @@
 
 <header class="top" id="top">
   <div class="wrap top-in">
-    <a class="brand" href="#temporada" aria-label="Inicio">
+    <a class="brand" href="#avengers-doomsday" aria-label="Inicio">
       <img id="logo" alt="" hidden>
       <span id="wordmark" class="wordmark" data-k="name">Bordec Studio</span>
     </a>
     <nav class="nav" aria-label="Secciones">
-      <a href="#temporada" class="on">Temporada</a>
+      <a href="#avengers-doomsday" data-col="avengers-doomsday">Avengers Doomsday</a>
+      <div class="navdd" id="navXmasWrap">
+        <button class="navdd-btn" id="navXmas" type="button" aria-expanded="false" aria-controls="xmasMenu">Navidad <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+        <div class="navdd-menu" id="xmasMenu" hidden>
+          <a href="#navidad-3d" data-col="navidad-3d">Navidad 3D</a>
+          <a href="#playeras-navidad" data-col="playeras-navidad">Playeras Navidad</a>
+        </div>
+      </div>
       <a href="#catalogo">Catálogo</a>
       <a href="#pedir">Cómo pedir</a>
       <a href="#contacto">Contacto</a>
     </nav>
+    <button class="menubtn" id="menuBtn" type="button" aria-label="Abrir menú"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2"/></svg></button>
     <button class="bagbtn" id="bagBtn" type="button" aria-label="Abrir bolsa">
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
       <span>Bolsa</span><span class="bagcount" id="bagCount">0</span>
@@ -85,7 +93,7 @@
     <span class="cross" style="right:36%;top:28px" aria-hidden="true"></span>
     <span class="cross" style="right:4%;top:28px" aria-hidden="true"></span>
     <div class="wrap hero-top">
-      <p class="hero-kicker" data-k="hero_kicker">Bienvenido al taller</p>
+      <p class="hero-kicker" id="heroKicker">Edición especial</p>
       <svg class="hero-mark" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="3.2 2.4"/><circle cx="20" cy="20" r="5" fill="currentColor"/></svg>
     </div>
     <div class="hero-titlebox">
@@ -96,7 +104,7 @@
     </div>
     <div class="wrap hero-meta">
       <span data-k="eyebrow">Taller de bordado y DTF</span>
-      <span data-k="season_word">Temporada 26</span>
+      <span id="heroLabel">Temporada 26</span>
     </div>
 
     <div class="wheel" id="wheel" tabindex="0" role="listbox" aria-label="Diseños de la temporada. Arrastra, toca una tarjeta o usa las flechas.">
@@ -298,7 +306,13 @@
         <div><label for="edBadge">Etiqueta (opcional)</label><input id="edBadge" type="text" placeholder="Ej. Nuevo"></div>
         <div><label for="edSort">Orden</label><input id="edSort" type="number" inputmode="numeric"></div>
       </div>
-      <label class="check"><input id="edSeason" type="checkbox"> Mostrar en la portada (temporada)</label>
+      <label for="edCollection">Colección (aparece en su rueda de portada)</label>
+      <select id="edCollection">
+        <option value="">Ninguna (solo catálogo)</option>
+        <option value="avengers-doomsday">Avengers Doomsday</option>
+        <option value="navidad-3d">Navidad 3D</option>
+        <option value="playeras-navidad">Playeras Navidad</option>
+      </select>
       <label class="check"><input id="edVisible" type="checkbox"> Visible en la página</label>
       <p class="form-err" id="edErr" hidden></p>
       <div class="ed-actions">
@@ -333,9 +347,9 @@
     <p class="form-help">Sin logo se muestra el nombre del negocio.</p>
     <label for="pgName">Nombre del negocio</label>
     <input id="pgName" type="text">
-    <label for="pgWord">Palabra grande de la portada</label>
-    <input id="pgWord" type="text" maxlength="12" placeholder="BORDEC">
-    <p class="form-help">Máximo 12 letras. Es la palabra que gira en la portada.</p>
+    <label for="pgWord">Texto grande de esta colección</label>
+    <input id="pgWord" type="text" maxlength="24" placeholder="AVENGERS DOOMSDAY">
+    <p class="form-help">Máximo 24 letras. Es el texto que gira en la portada de la colección que estás viendo.</p>
     <label for="pgWa">WhatsApp para pedidos</label>
     <input id="pgWa" type="tel" inputmode="tel" placeholder="10 dígitos, ej. 2461234567">
     <div class="two">
@@ -353,6 +367,21 @@
     <p class="form-err" id="pgErr" hidden></p>
     <button class="btn btn-dark" type="submit">Guardar cambios</button>
   </form>
+</dialog>
+
+<dialog id="dlgMenu" class="dlg drawer menu-drawer" aria-label="Menú">
+  <div class="drawer-in">
+    <div class="drawer-head"><h3>Menú</h3><button class="iconbtn" type="button" data-close aria-label="Cerrar menú"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
+    <nav class="mnav" aria-label="Secciones">
+      <a href="#avengers-doomsday" data-col="avengers-doomsday">Avengers Doomsday</a>
+      <p class="mnav-group">Navidad</p>
+      <a href="#navidad-3d" data-col="navidad-3d" class="sub">Navidad 3D</a>
+      <a href="#playeras-navidad" data-col="playeras-navidad" class="sub">Playeras Navidad</a>
+      <a href="#catalogo">Catálogo</a>
+      <a href="#pedir">Cómo pedir</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </div>
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>

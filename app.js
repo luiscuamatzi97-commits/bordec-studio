@@ -21,7 +21,7 @@ const DEF = {
   hero_title: 'Ropa con puntada propia.',
   hero_text: 'Playeras, sudaderas, polos y uniformes con bordado o estampado DTF. Elige un diseño de la temporada, tu talla y tu color.',
   season_word: 'Temporada 26',
-  hero_word: 'BORDEC', hero_kicker: 'Bienvenido al taller',
+  col_words: {},
   catalog_title: 'Catálogo',
   catalog_text: 'Precios por pieza en MXN. El precio de mayoreo se aplica solo en tu bolsa al llegar a la cantidad mínima.',
   steps_title: 'Cómo pedir',
@@ -163,16 +163,23 @@ function renderFacts() {
   const vis = P.filter(p => p.visible);
   const tees = vis.filter(p => /playera/i.test(p.name) && Number(p.price) > 0).map(p => Number(p.price));
   const mins = vis.map(p => p.wholesale_min).filter(Boolean);
-  const season = vis.filter(p => p.in_season && isApparel(p)).length;
+  const season = vis.filter(p => p.collection).length;
   $('#facts').innerHTML = [
     ['dark', tees.length ? fmt(Math.min(...tees)) : '—', 'Playeras desde, estampadas o bordadas'],
     ['purple', mins.length ? `${Math.min(...mins)} pzs` : '—', 'Precio de mayoreo desde esta cantidad'],
     ['', '2 técnicas', 'Bordado a máquina y estampado DTF a todo color'],
-    ['graphite', String(season).padStart(2, '0'), 'Diseños en la temporada actual']
+    ['graphite', String(season).padStart(2, '0'), 'Diseños en nuestras colecciones de temporada']
   ].map(([c, b, s]) => `<div class="fact ${c}"><b>${esc(b)}</b><span>${esc(s)}</span></div>`).join('');
 }
 
 /* ---------------- Hero: rolling word + card wheel ---------------- */
+const COLS = [
+  { slug: 'avengers-doomsday', title: 'Avengers Doomsday', word: 'Avengers Doomsday', kicker: 'Edición especial', label: 'Temporada 26', group: '' },
+  { slug: 'navidad-3d', title: 'Navidad 3D', word: 'Navidad 3D', kicker: 'Colección navideña', label: 'Navidad 2026', group: 'Navidad', cat: 'Navidad 3D' },
+  { slug: 'playeras-navidad', title: 'Playeras Navidad', word: 'Playeras Navidad', kicker: 'Colección navideña', label: 'Navidad 2026', group: 'Navidad', cat: 'Playeras Navidad' }
+];
+let COL = COLS[0];
+const colWord = c => String((S.col_words && S.col_words[c.slug]) || c.word).toUpperCase().slice(0, 24);
 const wheel = $('#wheel'), wcards = $('#wheelCards');
 const TONES = ['light', 'black', 'white', 'graphite', 'red', 'light', 'gray', 'black', 'white', 'blue', 'graphite', 'light'];
 let SL = [], f = 0, curId = null, lastUser = -1e9, hovering = false;
@@ -182,15 +189,18 @@ const stepDeg = () => innerWidth < 700 ? 24 : 19;
 const radius = () => parseFloat(getComputedStyle(wheel).getPropertyValue('--R')) || 600;
 
 function renderRoll() {
-  const w = String(S.hero_word || DEF.hero_word).toUpperCase().slice(0, 12);
-  $('#rollWord').innerHTML = [...w].map((c, i) => c === ' ' ? `<span class="ch" style="--i:${i}">&nbsp;</span>`
+  const w = colWord(COL);
+  $('#heroTitle').style.setProperty('--len', Math.max(6, w.length));
+  $('#heroKicker').textContent = COL.kicker; $('#heroLabel').textContent = COL.label;
+  $('#rollWord').innerHTML = [...w].map((c, i) => c === ' ' ? `<span class="ch sp" style="--i:${i}"></span>`
     : `<span class="ch" style="--i:${i}"><span class="fc">${esc(c)}</span><span class="fc f1 outline">${esc(c)}</span><span class="fc f2">${esc(c)}</span><span class="fc f3 outline">${esc(c)}</span></span>`).join('');
-  $('#heroTitle').setAttribute('aria-label', S.name || DEF.name);
-  $('#ringText').textContent = (`${S.name || DEF.name} • ${S.season_word || DEF.season_word} • `).toUpperCase().repeat(2);
+  $('#heroTitle').setAttribute('aria-label', `${COL.title} · ${S.name || DEF.name}`);
+  $('#ringText').textContent = (`${S.name || DEF.name} • ${COL.title} • `).toUpperCase().repeat(2);
 }
 function renderWheel(keepId) {
-  SL = P.filter(p => p.in_season && isApparel(p) && (p.visible || (editing && !preview))).sort(bySort);
-  if (!SL.length) SL = P.filter(p => isApparel(p) && p.visible).sort(bySort).slice(0, 10);
+  const base = P.filter(p => p.collection === COL.slug && isApparel(p) && (p.visible || (editing && !preview))).sort(bySort);
+  // small collections repeat around the wheel so it always looks full
+  SL = []; while (base.length && SL.length < 10) SL.push(...base);
   wcards.innerHTML = SL.map((p, i) => {
     const vis = p.model_url ? `<span class="wcard-vis photo"><img src="${esc(p.model_url)}" alt="" loading="lazy"></span>` : `<span class="wcard-vis">${garmentSVG(p)}</span>`;
     return `<button class="wcard" type="button" role="option" data-i="${i}" data-tone="${TONES[i % TONES.length]}" aria-label="${esc(p.name)}, ${priceLabel(p)}"><span class="wcard-in">${vis}<span class="wcard-lab"><span>${esc(p.name)}</span><span>${priceLabel(p)}</span></span></span></button>`;
@@ -299,7 +309,7 @@ function card(p) {
     : `<button class="btn btn-dark card-add" type="button" data-open="${p.id}">${sizesOf(p).length > 1 || colorsOf(p).length > 1 ? 'Elegir' : 'Agregar'}</button>`;
   return `<article class="card">
     <div class="card-visual" data-open="${p.id}" role="button" tabindex="0" aria-label="Ver ${esc(p.name)}">
-      ${p.badge ? `<span class="card-badge">${esc(p.badge)}</span>` : ''}${p.in_season ? '<span class="card-season">Temporada</span>' : ''}${p.visible ? '' : '<span class="card-hidden">Oculta</span>'}
+      ${p.badge ? `<span class="card-badge">${esc(p.badge)}</span>` : ''}${p.collection ? `<span class="card-season">${esc((COLS.find(c => c.slug === p.collection) || {}).title || '')}</span>` : ''}${p.visible ? '' : '<span class="card-hidden">Oculta</span>'}
       ${garmentSVG(p)}
     </div>
     <div class="card-body">
@@ -418,6 +428,27 @@ async function load() {
 }
 function renderAll() { applySettings(); renderRoll(); renderFacts(); renderWheel(curId); renderCatalog(); renderBag(); }
 
+/* ---------------- Collections (hash routes) + nav ---------------- */
+function colFromHash() { const x = location.hash.slice(1); return COLS.find(c => c.slug === x) || null; }
+function setCollection(c, scroll) {
+  const changed = c.slug !== COL.slug; COL = c;
+  $$('[data-col]').forEach(a => a.classList.toggle('on', a.dataset.col === c.slug));
+  $('#navXmas').classList.toggle('on', c.group === 'Navidad');
+  document.title = `${c.title} · ${S.name || DEF.name}`;
+  curId = null; renderRoll(); renderWheel();
+  if (c.cat && P.some(p => p.category === c.cat)) cat = c.cat; else if (changed) cat = 'Todas';
+  renderCatalog();
+  if (scroll) $('#temporada').scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth', block: 'start' });
+}
+const closeXmas = () => { $('#xmasMenu').hidden = true; $('#navXmas').setAttribute('aria-expanded', 'false'); };
+addEventListener('hashchange', () => { const c = colFromHash(); if (c) setCollection(c, true); closeXmas(); });
+$('#navXmas').addEventListener('click', e => { e.stopPropagation(); const open = $('#xmasMenu').hidden; $('#xmasMenu').hidden = !open; $('#navXmas').setAttribute('aria-expanded', String(open)); });
+document.addEventListener('click', e => { if (!e.target.closest('#navXmasWrap')) closeXmas(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeXmas(); });
+$('#menuBtn').addEventListener('click', () => $('#dlgMenu').showModal());
+$('#dlgMenu').addEventListener('click', e => { if (e.target.closest('a')) $('#dlgMenu').close(); });
+$$('[data-col]').forEach(a => a.addEventListener('click', () => { const c = COLS.find(x => x.slug === a.dataset.col); if (c && location.hash === '#' + c.slug) setCollection(c, true); }));
+
 /* ---------------- Admin: auth ---------------- */
 async function checkSession() {
   const { data } = await sb.auth.getSession();
@@ -514,13 +545,13 @@ function textToColors(t) {
 }
 function openEditor(id) {
   const p = id ? P.find(x => x.id === id) : null;
-  ed = p ? { ...p } : { id: null, name: 'Nueva prenda', category: cat !== 'Todas' ? cat : 'Diseños DTF personalizado', description: '', price: 0, wholesale_price: null, wholesale_min: null, garment: 'tee', color: '#0b0b0b', image_url: null, model_url: null, sizes: ['S', 'M', 'L', 'XL'], colors: [], in_season: true, visible: true, badge: '', sort: (Math.max(0, ...P.map(x => x.sort || 0)) + 1) };
+  ed = p ? { ...p } : { id: null, name: 'Nueva prenda', category: cat !== 'Todas' ? cat : 'Diseños DTF personalizado', description: '', price: 0, wholesale_price: null, wholesale_min: null, garment: 'tee', color: '#0b0b0b', image_url: null, model_url: null, sizes: ['S', 'M', 'L', 'XL'], colors: [], in_season: false, collection: (COL && COL.slug) || null, visible: true, badge: '', sort: (Math.max(0, ...P.map(x => x.sort || 0)) + 1) };
   $('#edTitle').textContent = p ? 'Editar prenda' : 'Nueva prenda';
   $('#edName').value = ed.name; $('#edCat').value = ed.category; $('#edDesc').value = ed.description || '';
   $('#edGarment').value = ed.garment; $('#edPrice').value = ed.price || ''; $('#edWs').value = ed.wholesale_price ?? ''; $('#edWsMin').value = ed.wholesale_min ?? '';
   $('#edSizes').value = (ed.sizes || []).join(', '); $('#edColors').value = colorsToText(ed.colors);
   $('#edBadge').value = ed.badge || ''; $('#edSort').value = ed.sort ?? 0;
-  $('#edSeason').checked = !!ed.in_season; $('#edVisible').checked = !!ed.visible;
+  $('#edCollection').value = ed.collection || ''; $('#edVisible').checked = !!ed.visible;
   $('#edErr').hidden = true; $('#edConfirm').hidden = true; $('#edDel').hidden = !p;
   renderSwatches(); edImgs(); edPreview();
   if (!$('#dlgEdit').open) $('#dlgEdit').showModal();
@@ -534,7 +565,7 @@ function readEditor() {
   ed.sizes = $('#edSizes').value.split(',').map(s => s.trim()).filter(Boolean);
   ed.colors = textToColors($('#edColors').value);
   ed.badge = $('#edBadge').value.trim(); ed.sort = parseInt($('#edSort').value, 10) || 0;
-  ed.in_season = $('#edSeason').checked; ed.visible = $('#edVisible').checked;
+  ed.collection = $('#edCollection').value || null; ed.visible = $('#edVisible').checked;
 }
 function edPreview() { const p = { ...ed, name: ed.name || 'Prenda' }; $('#edPreview').innerHTML = garmentSVG(p); }
 function edImgs() {
@@ -562,7 +593,7 @@ $('#edModelDel').addEventListener('click', () => { ed.model_url = null; edImgs()
 $('#edForm').addEventListener('submit', async e => {
   e.preventDefault(); readEditor();
   if (!ed.name) { $('#edErr').hidden = false; $('#edErr').textContent = 'Escribe un nombre para la prenda.'; $('#edName').focus(); return; }
-  const row = { name: ed.name, category: ed.category, description: ed.description, price: ed.price, wholesale_price: ed.wholesale_price, wholesale_min: ed.wholesale_min, garment: ed.garment, color: ed.color, image_url: ed.image_url, model_url: ed.model_url, sizes: ed.sizes, colors: ed.colors, in_season: ed.in_season, visible: ed.visible, badge: ed.badge, sort: ed.sort, updated_at: new Date().toISOString() };
+  const row = { name: ed.name, category: ed.category, description: ed.description, price: ed.price, wholesale_price: ed.wholesale_price, wholesale_min: ed.wholesale_min, garment: ed.garment, color: ed.color, image_url: ed.image_url, model_url: ed.model_url, sizes: ed.sizes, colors: ed.colors, collection: ed.collection, visible: ed.visible, badge: ed.badge, sort: ed.sort, updated_at: new Date().toISOString() };
   $('#edSave').textContent = 'Guardando…';
   const { data, error } = await (ed.id ? sb.from('web_products').update(row).eq('id', ed.id).select().single() : sb.from('web_products').insert(row).select().single());
   $('#edSave').textContent = 'Guardar prenda';
@@ -584,7 +615,7 @@ $('#aNew').addEventListener('click', () => openEditor(null));
 let pgLogo = '';
 $('#aPage').addEventListener('click', () => {
   pgLogo = S.logo_url || '';
-  $('#pgName').value = S.name || ''; $('#pgWord').value = S.hero_word || DEF.hero_word; $('#pgWa').value = S.whatsapp || ''; $('#pgIg').value = S.instagram || ''; $('#pgFb').value = S.facebook || '';
+  $('#pgName').value = S.name || ''; $('#pgWord').value = colWord(COL); $('#pgWa').value = S.whatsapp || ''; $('#pgIg').value = S.instagram || ''; $('#pgFb').value = S.facebook || '';
   $('#pgTk').value = S.tiktok || ''; $('#pgEmail').value = S.email || ''; $('#pgLoc').value = S.location || ''; $('#pgHours').value = S.hours || '';
   $('#pgErr').hidden = true; pgLogoShow(); $('#dlgPage').showModal();
 });
@@ -601,7 +632,7 @@ $('#pgWa').addEventListener('blur', () => { $('#pgErr').hidden = !waBad(); $('#p
 $('#pgForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (waBad()) { $('#pgErr').hidden = false; $('#pgErr').textContent = 'El número de WhatsApp debe tener 10 dígitos (o 12 con el 52 de México).'; $('#pgWa').focus(); return; }
-  const ok = await saveSettings({ logo_url: pgLogo, name: $('#pgName').value.trim() || DEF.name, hero_word: ($('#pgWord').value.trim() || DEF.hero_word).slice(0, 12), whatsapp: $('#pgWa').value.trim(), instagram: $('#pgIg').value.trim(), facebook: $('#pgFb').value.trim(), tiktok: $('#pgTk').value.trim(), email: $('#pgEmail').value.trim(), location: $('#pgLoc').value.trim(), hours: $('#pgHours').value.trim() });
+  const ok = await saveSettings({ logo_url: pgLogo, name: $('#pgName').value.trim() || DEF.name, col_words: { ...(S.col_words || {}), [COL.slug]: ($('#pgWord').value.trim() || COL.word).slice(0, 24) }, whatsapp: $('#pgWa').value.trim(), instagram: $('#pgIg').value.trim(), facebook: $('#pgFb').value.trim(), tiktok: $('#pgTk').value.trim(), email: $('#pgEmail').value.trim(), location: $('#pgLoc').value.trim(), hours: $('#pgHours').value.trim() });
   if (ok) $('#dlgPage').close();
 });
 
@@ -645,7 +676,8 @@ $('#aImport').addEventListener('click', async () => {
 
 /* ---------------- Boot ---------------- */
 RM.addEventListener?.('change', () => layoutW(true));
+COL = colFromHash() || COLS[0];
 renderAll();
-load().then(checkSession);
+load().then(() => { setCollection(COL, false); return checkSession(); });
 sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT' && isAdmin) setAdmin(false); });
 })();
