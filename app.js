@@ -138,6 +138,7 @@ function garmentSVG(p, opt = {}) {
 function applySettings() {
   $$('[data-k]').forEach(el => { if (document.activeElement !== el) el.textContent = S[el.dataset.k] ?? DEF[el.dataset.k] ?? ''; });
   document.title = S.name || DEF.name;
+  applyHero(); applyBgs();
   const logo = $('#logo');
   if (S.logo_url) { logo.src = S.logo_url; logo.alt = S.name; logo.hidden = false; $('#wordmark').hidden = true; }
   else { logo.hidden = true; $('#wordmark').hidden = false; }
@@ -180,6 +181,7 @@ const COLS = [
 ];
 let COL = COLS[0];
 const colWord = c => String((S.col_words && S.col_words[c.slug]) || c.word).toUpperCase().slice(0, 24);
+const colText = (key, prop) => (S[key] && S[key][COL.slug]) || COL[prop];
 const wheel = $('#wheel'), wcards = $('#wheelCards');
 const TONES = ['light', 'black', 'white', 'graphite', 'red', 'light', 'gray', 'black', 'white', 'blue', 'graphite', 'light'];
 let SL = [], f = 0, curId = null, lastUser = -1e9, hovering = false;
@@ -191,7 +193,7 @@ const radius = () => parseFloat(getComputedStyle(wheel).getPropertyValue('--R'))
 function renderRoll() {
   const w = colWord(COL);
   $('#heroTitle').style.setProperty('--len', Math.max(6, w.length));
-  $('#heroKicker').textContent = COL.kicker; $('#heroLabel').textContent = COL.label;
+  $('#heroKicker').textContent = colText('col_kickers', 'kicker'); $('#heroLabel').textContent = colText('col_labels', 'label');
   $('#rollWord').innerHTML = [...w].map((c, i) => c === ' ' ? `<span class="ch sp" style="--i:${i}"></span>`
     : `<span class="ch" style="--i:${i}"><span class="fc">${esc(c)}</span><span class="fc f1 outline">${esc(c)}</span><span class="fc f2">${esc(c)}</span><span class="fc f3 outline">${esc(c)}</span></span>`).join('');
   $('#heroTitle').setAttribute('aria-label', `${COL.title} · ${S.name || DEF.name}`);
@@ -221,6 +223,7 @@ function layoutW(instant) {
     c.dataset.ang = ang;
     if (jump) { void c.offsetWidth; c.style.transition = ''; }
     c.style.zIndex = String(100 - Math.round(a * 10));
+    c.style.setProperty('--act', Math.max(0, 1 - a).toFixed(3));
     c.style.visibility = Math.abs(ang) > 104 ? 'hidden' : '';
     c.classList.toggle('is-active', a < .5);
     c.setAttribute('aria-selected', a < .5 ? 'true' : 'false');
@@ -611,11 +614,123 @@ $('#edDelYes').addEventListener('click', async () => {
 });
 $('#aNew').addEventListener('click', () => openEditor(null));
 
+
+/* ---------------- Hero look (editable) ---------------- */
+const FONTS = [
+  { n: 'Clash Display', css: '"Clash Display", "Kanit", sans-serif', w: 600 },
+  { n: 'Kanit', css: '"Kanit", sans-serif', w: 600, g: 'Kanit:wght@600' },
+  { n: 'Anton', css: '"Anton", Impact, sans-serif', w: 400, g: 'Anton' },
+  { n: 'Bebas Neue', css: '"Bebas Neue", Impact, sans-serif', w: 400, g: 'Bebas+Neue' },
+  { n: 'Archivo Black', css: '"Archivo Black", sans-serif', w: 400, g: 'Archivo+Black' },
+  { n: 'Unbounded', css: '"Unbounded", sans-serif', w: 700, g: 'Unbounded:wght@700' },
+  { n: 'Syne', css: '"Syne", sans-serif', w: 800, g: 'Syne:wght@800' },
+  { n: 'Space Grotesk', css: '"Space Grotesk", sans-serif', w: 700, g: 'Space+Grotesk:wght@700' },
+  { n: 'Playfair Display', css: '"Playfair Display", serif', w: 800, g: 'Playfair+Display:wght@800' }
+];
+const HERO_DEF = { show: true, font: 'Clash Display', size: 100, roll: true, red: true, redColor: '#ff2525', cross: true, mark: true, ring: true, arrows: true };
+const heroCfg = () => ({ ...HERO_DEF, ...(S.hero || {}) });
+const loadedFonts = new Set();
+function loadFont(f) {
+  if (!f.g || loadedFonts.has(f.g)) return; loadedFonts.add(f.g);
+  const l = document.createElement('link'); l.rel = 'stylesheet';
+  l.href = `https://fonts.googleapis.com/css2?family=${f.g}&display=swap`; document.head.appendChild(l);
+}
+function applyHero(cfg) {
+  const c = cfg || heroCfg(), hero = $('#temporada'), t = $('#heroTitle');
+  const font = FONTS.find(x => x.n === c.font) || FONTS[0]; loadFont(font);
+  t.style.fontFamily = font.css; t.style.fontWeight = font.w; t.style.setProperty('--tsize', (c.size || 100) / 100);
+  t.classList.toggle('no-roll', !c.roll);
+  hero.style.setProperty('--hero-red', c.redColor || HERO_DEF.redColor);
+  const hide = []; if (!c.show) hide.push('head'); if (!c.red) hide.push('red'); if (!c.cross) hide.push('cross'); if (!c.mark) hide.push('mark'); if (!c.ring) hide.push('ring'); if (!c.arrows) hide.push('arrows');
+  hero.dataset.hide = hide.join(' ');
+}
+
+/* ---------------- Section backgrounds (editable) ---------------- */
+const SECS = { page: ['body', 'light'], header: ['.top', 'light'], hero: ['#temporada', 'light'], facts: ['#datos', 'light'], catalog: ['#catalogo', 'light'], howto: ['#pedir', 'dark'], footer: ['#contacto', 'dark'] };
+const FLIP_TO_DARK = { '--black': '#f4f4f4', '--white': '#161616', '--gray-dark': '#b5b5b5', '--line': '#3a3a3a', '--light': '#262626', '--graphite': '#e9e9e9' };
+const FLIP_TO_LIGHT = { '--white': '#0b0b0b', '--muted-on-dark': '#5f5f5f', '--graphite': '#e2e2e2', '--graphite-2': '#d0d0d0', '--gray': '#6b6b6b' };
+function applyBgs(map) {
+  const bg = map || S.bg || {};
+  for (const [k, [sel, tone]] of Object.entries(SECS)) {
+    const el = $(sel); if (!el) continue;
+    for (const v of [...Object.keys(FLIP_TO_DARK), ...Object.keys(FLIP_TO_LIGHT)]) el.style.removeProperty(v);
+    el.style.removeProperty('background'); el.style.removeProperty('color');
+    const col = bg[k]; if (!col) continue;
+    el.style.background = col;
+    const now = lum(col) < 140 ? 'dark' : 'light';
+    if (now !== tone) for (const [v, x] of Object.entries(now === 'dark' ? FLIP_TO_DARK : FLIP_TO_LIGHT)) el.style.setProperty(v, x);
+    if (k === 'page') el.style.color = now === 'dark' ? '#f4f4f4' : '#0b0b0b';
+  }
+}
+
+/* ---------------- Admin: hero editor ---------------- */
+let hrDraft = null;
+function openHero() {
+  const c = heroCfg(); hrDraft = { ...c };
+  $('#hrCol').textContent = `Estás editando la portada de «${COL.title}». El título y los textos son de esta colección; la tipografía y los elementos aplican a todas.`;
+  $('#hrFont').innerHTML = FONTS.map(f => `<option value="${esc(f.n)}">${esc(f.n)}</option>`).join('');
+  $('#hrShowHead').checked = c.show; $('#hrWord').value = colWord(COL);
+  $('#hrKicker').value = colText('col_kickers', 'kicker'); $('#hrLabel').value = colText('col_labels', 'label'); $('#hrLeft').value = S.eyebrow || DEF.eyebrow;
+  $('#hrFont').value = c.font; $('#hrSize').value = c.size; $('#hrSizeVal').textContent = c.size + '%';
+  $('#hrRoll').checked = c.roll; $('#hrRed').checked = c.red; $('#hrCross').checked = c.cross; $('#hrMark').checked = c.mark; $('#hrRing').checked = c.ring; $('#hrArrows').checked = c.arrows;
+  $('#hrRedColor').value = /^#[0-9a-f]{6}$/i.test(c.redColor) ? c.redColor : '#ff2525';
+  markSw('#hrRedSw', c.redColor);
+  $('#dlgHero').showModal();
+}
+function markSw(box, col) { $$(`${box} .sw`).forEach(s => s.setAttribute('aria-pressed', String((s.dataset.c || '').toLowerCase() === String(col || '').toLowerCase()))); }
+function readHero() {
+  Object.assign(hrDraft, { show: $('#hrShowHead').checked, font: $('#hrFont').value, size: +$('#hrSize').value, roll: $('#hrRoll').checked, red: $('#hrRed').checked, cross: $('#hrCross').checked, mark: $('#hrMark').checked, ring: $('#hrRing').checked, arrows: $('#hrArrows').checked });
+  $('#hrSizeVal').textContent = hrDraft.size + '%';
+  applyHero(hrDraft);
+  // live text preview
+  const w = ($('#hrWord').value.trim() || COL.word).toUpperCase().slice(0, 24);
+  const keep = S.col_words; S.col_words = { ...(S.col_words || {}), [COL.slug]: w }; renderRoll(); S.col_words = keep;
+  $('#heroKicker').textContent = $('#hrKicker').value; $('#heroLabel').textContent = $('#hrLabel').value;
+  $$('[data-k="eyebrow"]').forEach(e => e.textContent = $('#hrLeft').value);
+}
+$('#hrForm').addEventListener('input', e => { if (e.target.id === 'hrRedColor') { hrDraft.redColor = e.target.value; markSw('#hrRedSw', ''); } readHero(); });
+$('#hrForm').addEventListener('change', readHero);
+$('#hrRedSw').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; hrDraft.redColor = b.dataset.c; markSw('#hrRedSw', b.dataset.c); readHero(); });
+$('#hrReset').addEventListener('click', () => { hrDraft = { ...HERO_DEF }; $('#hrWord').value = COL.word.toUpperCase(); $('#hrKicker').value = COL.kicker; $('#hrLabel').value = COL.label; $('#hrLeft').value = DEF.eyebrow;
+  $('#hrShowHead').checked = true; $('#hrFont').value = HERO_DEF.font; $('#hrSize').value = 100; $('#hrRoll').checked = $('#hrRed').checked = $('#hrCross').checked = $('#hrMark').checked = $('#hrRing').checked = $('#hrArrows').checked = true; markSw('#hrRedSw', HERO_DEF.redColor); readHero(); });
+$('#hrForm').addEventListener('submit', async e => {
+  e.preventDefault(); readHero();
+  const ok = await saveSettings({
+    hero: hrDraft,
+    col_words: { ...(S.col_words || {}), [COL.slug]: ($('#hrWord').value.trim() || COL.word).slice(0, 24) },
+    col_kickers: { ...(S.col_kickers || {}), [COL.slug]: $('#hrKicker').value.trim() || COL.kicker },
+    col_labels: { ...(S.col_labels || {}), [COL.slug]: $('#hrLabel').value.trim() || COL.label },
+    eyebrow: $('#hrLeft').value.trim() || DEF.eyebrow
+  });
+  if (ok) { $('#dlgHero').close(); renderRoll(); }
+});
+$('#dlgHero').addEventListener('close', () => { applySettings(); renderRoll(); });
+$('#aHero').addEventListener('click', openHero);
+$('#temporada').addEventListener('click', e => { if (editing && !preview && e.target.closest('.hero-top, .hero-titlebox, .hero-meta') && !e.target.closest('.tri')) { e.preventDefault(); openHero(); } }, true);
+
+/* ---------------- Admin: backgrounds editor ---------------- */
+let bgDraft = {};
+function openBg() {
+  bgDraft = { ...(S.bg || {}) };
+  $$('#bgForm .bgrow').forEach(r => { const k = r.dataset.sec; markSw(`.bgrow[data-sec="${k}"]`, bgDraft[k]); r.querySelector('input[type=color]').value = /^#[0-9a-f]{6}$/i.test(bgDraft[k] || '') ? bgDraft[k] : '#f4f4f4'; });
+  $('#dlgBg').showModal();
+}
+$('#bgForm').addEventListener('click', e => {
+  const r = e.target.closest('.bgrow'); if (!r) return; const k = r.dataset.sec;
+  const b = e.target.closest('[data-c]'); if (b) { bgDraft[k] = b.dataset.c; markSw(`.bgrow[data-sec="${k}"]`, b.dataset.c); applyBgs(bgDraft); }
+  if (e.target.closest('.bg-reset')) { delete bgDraft[k]; markSw(`.bgrow[data-sec="${k}"]`, ''); applyBgs(bgDraft); }
+});
+$('#bgForm').addEventListener('input', e => { const r = e.target.closest('.bgrow'); if (!r || e.target.type !== 'color') return; bgDraft[r.dataset.sec] = e.target.value; markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, ''); applyBgs(bgDraft); });
+$('#bgReset').addEventListener('click', () => { bgDraft = {}; $$('#bgForm .bgrow').forEach(r => markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, '')); applyBgs(bgDraft); });
+$('#bgForm').addEventListener('submit', async e => { e.preventDefault(); if (await saveSettings({ bg: bgDraft })) $('#dlgBg').close(); });
+$('#dlgBg').addEventListener('close', () => applyBgs());
+$('#aBg').addEventListener('click', openBg);
+
 /* ---------------- Admin: page settings ---------------- */
 let pgLogo = '';
 $('#aPage').addEventListener('click', () => {
   pgLogo = S.logo_url || '';
-  $('#pgName').value = S.name || ''; $('#pgWord').value = colWord(COL); $('#pgWa').value = S.whatsapp || ''; $('#pgIg').value = S.instagram || ''; $('#pgFb').value = S.facebook || '';
+  $('#pgName').value = S.name || ''; $('#pgWa').value = S.whatsapp || ''; $('#pgIg').value = S.instagram || ''; $('#pgFb').value = S.facebook || '';
   $('#pgTk').value = S.tiktok || ''; $('#pgEmail').value = S.email || ''; $('#pgLoc').value = S.location || ''; $('#pgHours').value = S.hours || '';
   $('#pgErr').hidden = true; pgLogoShow(); $('#dlgPage').showModal();
 });
@@ -632,7 +747,7 @@ $('#pgWa').addEventListener('blur', () => { $('#pgErr').hidden = !waBad(); $('#p
 $('#pgForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (waBad()) { $('#pgErr').hidden = false; $('#pgErr').textContent = 'El número de WhatsApp debe tener 10 dígitos (o 12 con el 52 de México).'; $('#pgWa').focus(); return; }
-  const ok = await saveSettings({ logo_url: pgLogo, name: $('#pgName').value.trim() || DEF.name, col_words: { ...(S.col_words || {}), [COL.slug]: ($('#pgWord').value.trim() || COL.word).slice(0, 24) }, whatsapp: $('#pgWa').value.trim(), instagram: $('#pgIg').value.trim(), facebook: $('#pgFb').value.trim(), tiktok: $('#pgTk').value.trim(), email: $('#pgEmail').value.trim(), location: $('#pgLoc').value.trim(), hours: $('#pgHours').value.trim() });
+  const ok = await saveSettings({ logo_url: pgLogo, name: $('#pgName').value.trim() || DEF.name, whatsapp: $('#pgWa').value.trim(), instagram: $('#pgIg').value.trim(), facebook: $('#pgFb').value.trim(), tiktok: $('#pgTk').value.trim(), email: $('#pgEmail').value.trim(), location: $('#pgLoc').value.trim(), hours: $('#pgHours').value.trim() });
   if (ok) $('#dlgPage').close();
 });
 
