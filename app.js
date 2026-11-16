@@ -739,7 +739,7 @@ function slideHTML(s, i, solo) {
   const ink = s.bg ? (lum(s.bg) < 140 ? 'light' : 'dark') : '';
   const text = s.text || (p ? p.name : 'Tarjeta sin producto');
   const price = p ? priceLabel(p) : '';
-  const inner = `<span class="wcard-in"${s.bg ? ` style="background:${esc(s.bg)}"` : ''}>${vis}<span class="wcard-lab"><span>${esc(text)}</span><span>${price}</span></span></span>`;
+  const inner = `<span class="wcard-in"${s.bg ? ` style="background:${esc(s.bg)}"` : ''}>${vis}</span>`;
   return solo ? `<span class="wcard solo" data-tone="${tone}" data-ink="${ink}">${inner}</span>`
     : `<button class="wcard" type="button" role="option" data-i="${i}" data-tone="${tone}" data-ink="${ink}" aria-label="${esc(text)}${price ? ', ' + price : ''}">${inner}</button>`;
 }

@@ -459,6 +459,11 @@ body.editing .wcard:hover .wcard-in { outline-color: var(--blue); }
 .sl-move .btn:disabled { opacity: .4; cursor: not-allowed; }
 #slBg .sw { width: 30px; height: 30px; }
 
+/* wheel cards: image only */
+.wcard-vis { inset: 0 !important; padding: 18px 22px !important; }
+.wcard-vis.photo { padding: 0 !important; }
+.wcard-lab { display: none; }
+
 @keyframes fadeOnly { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
