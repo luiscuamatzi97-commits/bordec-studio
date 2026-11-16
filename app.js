@@ -135,6 +135,14 @@ function garmentSVG(p, opt = {}) {
 }
 
 /* ---------------- Settings / text ---------------- */
+const FAV_DEF = document.getElementById('favicon')?.getAttribute('href');
+function setFavicon(url) {
+  const l = document.getElementById('favicon'); if (!l) return;
+  l.href = url || FAV_DEF; l.removeAttribute('type');
+  let t = document.querySelector('link[rel="apple-touch-icon"]');
+  if (url) { if (!t) { t = document.createElement('link'); t.rel = 'apple-touch-icon'; document.head.appendChild(t); } t.href = url; }
+  else if (t) t.remove();
+}
 function applySettings() {
   $$('[data-k]').forEach(el => { if (document.activeElement !== el) el.textContent = S[el.dataset.k] ?? DEF[el.dataset.k] ?? ''; });
   document.title = S.name || DEF.name;
@@ -142,6 +150,7 @@ function applySettings() {
   const logo = $('#logo');
   if (S.logo_url) { logo.src = S.logo_url; logo.alt = S.name; logo.hidden = false; $('#wordmark').hidden = true; }
   else { logo.hidden = true; $('#wordmark').hidden = false; }
+  setFavicon(S.favicon_url || S.logo_url);
   $('#year').textContent = new Date().getFullYear();
   const wa = waLink(`Hola ${S.name}, quiero información sobre sus prendas.`);
   $('#footWa').hidden = !wa; if (wa) $('#footWa').href = wa;
@@ -1000,12 +1009,12 @@ $('#fxDelNo').addEventListener('click', () => { $('#fxConfirm').hidden = true; }
 $('#fxDelYes').addEventListener('click', async () => { fxList.splice(fxIdx, 1); if (await saveFacts(fxList)) { $('#dlgFact').close(); toast('Recuadro quitado'); } });
 
 /* ---------------- Admin: page settings ---------------- */
-let pgLogo = '';
+let pgLogo = '', pgFav = '';
 $('#aPage').addEventListener('click', () => {
-  pgLogo = S.logo_url || '';
+  pgLogo = S.logo_url || ''; pgFav = S.favicon_url || '';
   $('#pgName').value = S.name || ''; $('#pgWa').value = S.whatsapp || ''; $('#pgIg').value = S.instagram || ''; $('#pgFb').value = S.facebook || '';
   $('#pgTk').value = S.tiktok || ''; $('#pgEmail').value = S.email || ''; $('#pgLoc').value = S.location || ''; $('#pgHours').value = S.hours || '';
-  $('#pgErr').hidden = true; pgLogoShow(); $('#dlgPage').showModal();
+  $('#pgErr').hidden = true; pgLogoShow(); pgFavShow(); $('#dlgPage').showModal();
 });
 function pgLogoShow() { const i = $('#pgLogo'); i.hidden = !pgLogo; if (pgLogo) i.src = pgLogo; $('#pgLogoDel').hidden = !pgLogo; }
 $('#pgFile').addEventListener('change', async e => {
@@ -1015,12 +1024,20 @@ $('#pgFile').addEventListener('change', async e => {
   e.target.value = '';
 });
 $('#pgLogoDel').addEventListener('click', () => { pgLogo = ''; pgLogoShow(); });
+function pgFavShow() { const i = $('#pgFav'); i.hidden = !pgFav; if (pgFav) i.src = pgFav; $('#pgFavDel').hidden = !pgFav; }
+$('#pgFavFile').addEventListener('change', async e => {
+  const fl = e.target.files[0]; if (!fl) return; toast('Subiendo icono…');
+  try { pgFav = await upload(fl, 'logo', 256); pgFavShow(); toast('Icono listo. Guarda los cambios para publicarlo.'); }
+  catch (err) { toast('No se pudo subir el icono. Prueba con un PNG o JPG de menos de 5 MB.', true); }
+  e.target.value = '';
+});
+$('#pgFavDel').addEventListener('click', () => { pgFav = ''; pgFavShow(); });
 const waBad = () => { const d = $('#pgWa').value.replace(/\D/g, ''); return d && d.length !== 10 && d.length !== 12; };
 $('#pgWa').addEventListener('blur', () => { $('#pgErr').hidden = !waBad(); $('#pgErr').textContent = 'El número de WhatsApp debe tener 10 dígitos (o 12 con el 52 de México).'; });
 $('#pgForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (waBad()) { $('#pgErr').hidden = false; $('#pgErr').textContent = 'El número de WhatsApp debe tener 10 dígitos (o 12 con el 52 de México).'; $('#pgWa').focus(); return; }
-  const ok = await saveSettings({ logo_url: pgLogo, name: $('#pgName').value.trim() || DEF.name, whatsapp: $('#pgWa').value.trim(), instagram: $('#pgIg').value.trim(), facebook: $('#pgFb').value.trim(), tiktok: $('#pgTk').value.trim(), email: $('#pgEmail').value.trim(), location: $('#pgLoc').value.trim(), hours: $('#pgHours').value.trim() });
+  const ok = await saveSettings({ logo_url: pgLogo, favicon_url: pgFav, name: $('#pgName').value.trim() || DEF.name, whatsapp: $('#pgWa').value.trim(), instagram: $('#pgIg').value.trim(), facebook: $('#pgFb').value.trim(), tiktok: $('#pgTk').value.trim(), email: $('#pgEmail').value.trim(), location: $('#pgLoc').value.trim(), hours: $('#pgHours').value.trim() });
   if (ok) $('#dlgPage').close();
 });
 
