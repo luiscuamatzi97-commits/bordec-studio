@@ -490,6 +490,31 @@ body.hdr-see main > .hero:first-child { margin-top: -76px; padding-top: 90px; }
 
 .wheel img, .wheel svg { -webkit-user-drag: none; user-select: none; pointer-events: none; }
 
+/* hero cards never go over the sticky menu */
+.hero { isolation: isolate; z-index: 0; }
+/* ---------- Free-layout fact tiles ---------- */
+.facts { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.fact.fx { position: relative; display: block; min-height: 210px; padding: 0; overflow: hidden; }
+.fx-el { position: absolute; max-width: 86%; }
+.fact.fx b.fx-el { font-size: clamp(2rem, 1.5rem + 1.8vw, 3.25rem); line-height: .95; white-space: nowrap; max-width: none; }
+.fact.fx .fx-small { font-size: var(--t-2); line-height: 1.45; opacity: .78; max-width: 82%; color: inherit; }
+.fx-icon { display: grid; place-items: center; }
+.fx-icon svg, .fx-icon img { width: 100%; height: 100%; object-fit: contain; }
+body.editing .fact.fx { outline: 1px dashed var(--gray); outline-offset: 3px; cursor: pointer; }
+body.editing .fx-el { cursor: grab; touch-action: none; user-select: none; }
+body.editing .fx-el:hover { outline: 1px dashed currentColor; outline-offset: 4px; }
+.fact-add { min-height: 210px; border-radius: var(--r-md); border: 2px dashed var(--gray); background: transparent; color: var(--gray-dark); font: 500 var(--t-1) var(--f-body); cursor: pointer; }
+.fact-add:hover { border-color: var(--black); color: var(--black); }
+@media (max-width: 899.98px) { .fact.fx, .fact-add { min-height: 170px; } }
+.fx-preview { background: #e9e9e9; }
+.fx-prev-box { width: 100%; max-width: 300px; }
+.fx-prev-box .fact.fx { min-height: 210px; }
+.fx-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; }
+.fx-ic { height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--white); display: grid; place-items: center; cursor: pointer; color: var(--black); font-size: 1.1rem; }
+.fx-ic svg { width: 24px; height: 24px; }
+.fx-ic[aria-pressed="true"] { background: var(--black); color: var(--white); border-color: var(--black); }
+#fxBg .sw { width: 30px; height: 30px; }
+
 @keyframes fadeOnly { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

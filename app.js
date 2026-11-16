@@ -165,12 +165,45 @@ function renderFacts() {
   const tees = vis.filter(p => /playera/i.test(p.name) && Number(p.price) > 0).map(p => Number(p.price));
   const mins = vis.map(p => p.wholesale_min).filter(Boolean);
   const season = vis.filter(p => p.collection).length;
-  $('#facts').innerHTML = [
-    ['dark', tees.length ? fmt(Math.min(...tees)) : '—', 'Playeras desde, estampadas o bordadas'],
-    ['purple', mins.length ? `${Math.min(...mins)} pzs` : '—', 'Precio de mayoreo desde esta cantidad'],
-    ['', '2 técnicas', 'Bordado a máquina y estampado DTF a todo color'],
-    ['graphite', String(season).padStart(2, '0'), 'Diseños en nuestras colecciones de temporada']
-  ].map(([c, b, s]) => `<div class="fact ${c}"><b>${esc(b)}</b><span>${esc(s)}</span></div>`).join('');
+  FACT_AUTO = [
+    { bg: '#0b0b0b', big: tees.length ? fmt(Math.min(...tees)) : '—', small: 'Playeras desde, estampadas o bordadas', icon: 'tag' },
+    { bg: '#a74dff', big: mins.length ? `${Math.min(...mins)} pzs` : '—', small: 'Precio de mayoreo desde esta cantidad', icon: 'box' },
+    { bg: '#ffffff', big: '2 técnicas', small: 'Bordado a máquina y estampado DTF a todo color', icon: 'needle' },
+    { bg: '#1f1f1f', big: String(season).padStart(2, '0'), small: 'Diseños en nuestras colecciones de temporada', icon: 'shirt' }
+  ];
+  const tiles = factsList();
+  $('#facts').innerHTML = tiles.map((t, i) => factHTML(t, i)).join('') + (editing && !preview ? '<button class="fact-add" type="button" id="factAdd">+ Recuadro</button>' : '');
+}
+let FACT_AUTO = [];
+const FACT_POS = { big: [7, 9], small: [7, 66], icon: [76, 9] };
+function factsList() { return Array.isArray(S.facts) && S.facts.length ? S.facts : FACT_AUTO.map((t, i) => ({ id: 'f' + i, ...t })); }
+const FICONS = {
+  tag: '<path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
+  box: '<path d="M3 7l9-4 9 4v10l-9 4-9-4V7Z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+  needle: '<path d="M20 4L7 17"/><path d="M17 3l4 4-2 2-4-4 2-2Z"/><path d="M7 17c-2 2-4 1-4 3s3 1 5-1"/>',
+  shirt: '<path d="M8 3l-5 3 2 5 3-1v11h8V10l3 1 2-5-5-3c0 2-2 3-4 3S8 5 8 3Z"/>',
+  scissors: '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.5 8L20 18M8.5 16L20 6"/>',
+  star: '<path d="M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.3l1-6.2L3 9.7l6.2-.9L12 3Z"/>',
+  truck: '<path d="M2 6h12v10H2zM14 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+  palette: '<path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5 1-1.5 2-1.5h2a4 4 0 0 0 4-4c0-4.5-4-8-9-8Z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/>',
+  sparkle: '<path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><path d="M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4V5Z"/>',
+  heart: '<path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-3 4.5 4.5 0 0 1 8 3c0 6-8 11-8 11Z"/>',
+  ruler: '<path d="M3 17L17 3l4 4L7 21l-4-4Z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/>',
+  bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z"/>'
+};
+const iconSVG = (name, col) => FICONS[name] ? `<svg viewBox="0 0 24 24" fill="none" stroke="${col || 'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${FICONS[name]}</svg>` : '';
+const inkFor = bg => lum(bg || '#ffffff') < 140 ? '#f4f4f4' : '#0b0b0b';
+function factHTML(t, i) {
+  const ink = t.ink === 'light' ? '#f4f4f4' : t.ink === 'dark' ? '#0b0b0b' : inkFor(t.bg);
+  const pos = (k) => { const p = (t.pos && t.pos[k]) || FACT_POS[k]; return `left:${p[0]}%;top:${p[1]}%`; };
+  const icon = t.iconImg ? `<img src="${esc(t.iconImg)}" alt="" draggable="false">` : (t.icon ? iconSVG(t.icon, t.iconColor) : '');
+  return `<div class="fact fx" data-fi="${i}" style="background:${esc(t.bg || '#ffffff')};color:${ink}">
+    <b class="fx-el" data-el="big" style="${pos('big')}">${esc(t.big || '')}</b>
+    <span class="fx-el fx-small" data-el="small" style="${pos('small')}">${esc(t.small || '')}</span>
+    ${icon ? `<span class="fx-el fx-icon" data-el="icon" style="${pos('icon')};width:${t.iconSize || 44}px;height:${t.iconSize || 44}px">${icon}</span>` : ''}
+  </div>`;
 }
 
 /* ---------------- Hero: rolling word + card wheel ---------------- */
@@ -483,7 +516,7 @@ function setAdmin(on) {
   $('#adminbar').hidden = !on;
   $('#adminLink').textContent = on ? 'Estás en modo edición' : 'Acceso para el taller';
   $$('[data-k]').forEach(el => editing ? bindEditable(el) : unbindEditable(el));
-  if (P.length || on) { renderWheel(curId); renderCatalog(); applySettings(); updateSend(); }
+  if (P.length || on) { renderWheel(curId); renderCatalog(); renderFacts(); applySettings(); updateSend(); }
 }
 $('#adminLink').addEventListener('click', () => { if (!isAdmin) { $('#lgErr').hidden = true; $('#dlgLogin').showModal(); } });
 if (location.hash === '#admin') setTimeout(() => !isAdmin && $('#dlgLogin').showModal(), 400);
@@ -881,6 +914,90 @@ $('#slDelYes').addEventListener('click', async () => {
   if (await saveSlides(list, next && next.key)) { $('#dlgSlide').close(); toast('Tarjeta quitada'); }
 });
 $('#aSlide').addEventListener('click', () => openSlide(SL.length ? idxOf() : -1, true));
+
+
+/* ---------------- Admin: facts tiles editor (colors, texts, icons, free placement) ---------------- */
+let fxList = null, fxIdx = -1, ftDraft = null;
+const factsEditable = () => factsList().map(t => JSON.parse(JSON.stringify(t)));
+async function saveFacts(list) { const ok = await saveSettings({ facts: list }); if (ok) renderFacts(); return ok; }
+// drag elements inside a tile (edit mode only); a click without movement opens the editor
+const fdrag = { on: false };
+$('#facts').addEventListener('pointerdown', e => {
+  if (!editing || preview) return;
+  const el = e.target.closest('.fx-el'), tile = e.target.closest('.fact'); if (!tile) return;
+  const r = tile.getBoundingClientRect();
+  Object.assign(fdrag, { on: true, el, tile, r, x: e.clientX, y: e.clientY, moved: false, id: e.pointerId,
+    ox: el ? el.offsetLeft : 0, oy: el ? el.offsetTop : 0 });
+  if (el) { try { tile.setPointerCapture(e.pointerId); } catch (_) {} e.preventDefault(); }
+});
+$('#facts').addEventListener('pointermove', e => {
+  if (!fdrag.on || !fdrag.el || e.pointerId !== fdrag.id) return;
+  const dx = e.clientX - fdrag.x, dy = e.clientY - fdrag.y;
+  if (!fdrag.moved && Math.hypot(dx, dy) < 4) return;
+  fdrag.moved = true;
+  const { r, el } = fdrag;
+  const x = Math.max(0, Math.min(r.width - el.offsetWidth, fdrag.ox + dx)), y = Math.max(0, Math.min(r.height - el.offsetHeight, fdrag.oy + dy));
+  el.style.left = (x / r.width * 100).toFixed(2) + '%'; el.style.top = (y / r.height * 100).toFixed(2) + '%';
+});
+$('#facts').addEventListener('pointerup', async e => {
+  if (!fdrag.on) return; fdrag.on = false;
+  const i = +fdrag.tile.dataset.fi;
+  if (fdrag.moved && fdrag.el) {
+    const list = factsEditable(), t = list[i];
+    t.pos = { ...(t.pos || {}), [fdrag.el.dataset.el]: [parseFloat(fdrag.el.style.left), parseFloat(fdrag.el.style.top)] };
+    await saveFacts(list); return;
+  }
+  openFact(i);
+});
+$('#facts').addEventListener('click', e => { if (e.target.closest('#factAdd')) { e.stopPropagation(); openFact(-1); } });
+
+function openFact(i) {
+  fxList = factsEditable();
+  if (i < 0) { fxList.push({ id: 'f' + Date.now().toString(36), bg: '#f4f4f4', big: 'Nuevo', small: 'Escribe aquí un dato de tu taller', icon: 'star' }); i = fxList.length - 1; }
+  fxIdx = i; ftDraft = { ...fxList[i] };
+  $('#fxBig').value = ftDraft.big || ''; $('#fxSmall').value = ftDraft.small || '';
+  $('#fxInk').value = ftDraft.ink || 'auto'; $('#fxIconSize').value = ftDraft.iconSize || 44;
+  $('#fxIconColor').value = /^#[0-9a-f]{6}$/i.test(ftDraft.iconColor || '') ? ftDraft.iconColor : '#ff2525';
+  $('#fxIcons').innerHTML = '<button type="button" class="fx-ic" data-ic="" aria-label="Sin icono">∅</button>' + Object.keys(FICONS).map(k => `<button type="button" class="fx-ic" data-ic="${k}" aria-label="Icono ${k}">${iconSVG(k)}</button>`).join('');
+  $('#fxPos').textContent = `Recuadro ${i + 1} de ${fxList.length}. Para moverlos, arrastra el número, el texto o el icono directo en la página.`;
+  $('#fxConfirm').hidden = true; fxRefresh(); $('#dlgFact').showModal();
+}
+function fxRefresh() {
+  markSw('#fxBg', ftDraft.bg || ''); $('#fxBgColor').value = /^#[0-9a-f]{6}$/i.test(ftDraft.bg || '') ? ftDraft.bg : '#ffffff';
+  $$('#fxIcons .fx-ic').forEach(b => b.setAttribute('aria-pressed', String(!ftDraft.iconImg && (b.dataset.ic || '') === (ftDraft.icon || ''))));
+  const im = $('#fxIconImg'); im.hidden = !ftDraft.iconImg; if (ftDraft.iconImg) im.src = ftDraft.iconImg; $('#fxIconImgDel').hidden = !ftDraft.iconImg;
+  $('#fxSizeVal').textContent = (ftDraft.iconSize || 44) + ' px';
+  $('#fxPreview').innerHTML = factHTML(ftDraft, 0);
+  $('#fxLeft').disabled = fxIdx <= 0; $('#fxRight').disabled = fxIdx >= fxList.length - 1;
+}
+$('#fxForm').addEventListener('input', e => {
+  if (e.target.id === 'fxBgColor') ftDraft.bg = e.target.value;
+  if (e.target.id === 'fxBig') ftDraft.big = e.target.value;
+  if (e.target.id === 'fxSmall') ftDraft.small = e.target.value;
+  if (e.target.id === 'fxIconSize') ftDraft.iconSize = +e.target.value;
+  if (e.target.id === 'fxIconColor') ftDraft.iconColor = e.target.value;
+  if (e.target.id === 'fxInk') ftDraft.ink = e.target.value === 'auto' ? null : e.target.value;
+  fxRefresh();
+});
+$('#fxForm').addEventListener('change', e => { if (e.target.id === 'fxInk') { ftDraft.ink = e.target.value === 'auto' ? null : e.target.value; fxRefresh(); } });
+$('#fxBg').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { ftDraft.bg = b.dataset.c; fxRefresh(); } });
+$('#fxIcons').addEventListener('click', e => { const b = e.target.closest('.fx-ic'); if (!b) return; ftDraft.icon = b.dataset.ic || null; ftDraft.iconImg = null; fxRefresh(); });
+$('#fxIconAuto').addEventListener('click', () => { ftDraft.iconColor = null; fxRefresh(); });
+$('#fxIconFile').addEventListener('change', async e => {
+  const fl = e.target.files[0]; if (!fl) return; toast('Subiendo icono…');
+  try { ftDraft.iconImg = await upload(fl, 'icons', 400); fxRefresh(); toast('Icono listo. Guarda el recuadro.'); }
+  catch (err) { toast('No se pudo subir el icono. Prueba con un PNG o SVG pequeño.', true); }
+  e.target.value = '';
+});
+$('#fxIconImgDel').addEventListener('click', () => { ftDraft.iconImg = null; fxRefresh(); });
+const fxMove = d => { const t = fxIdx + d; if (t < 0 || t >= fxList.length) return; fxList[fxIdx] = ftDraft; [fxList[fxIdx], fxList[t]] = [fxList[t], fxList[fxIdx]]; fxIdx = t; fxRefresh(); };
+$('#fxLeft').addEventListener('click', () => fxMove(-1));
+$('#fxRight').addEventListener('click', () => fxMove(1));
+$('#fxResetPos').addEventListener('click', () => { ftDraft.pos = null; fxRefresh(); });
+$('#fxForm').addEventListener('submit', async e => { e.preventDefault(); fxList[fxIdx] = ftDraft; if (await saveFacts(fxList)) { $('#dlgFact').close(); toast('Recuadro guardado'); } });
+$('#fxDel').addEventListener('click', () => { $('#fxConfirm').hidden = false; });
+$('#fxDelNo').addEventListener('click', () => { $('#fxConfirm').hidden = true; });
+$('#fxDelYes').addEventListener('click', async () => { fxList.splice(fxIdx, 1); if (await saveFacts(fxList)) { $('#dlgFact').close(); toast('Recuadro quitado'); } });
 
 /* ---------------- Admin: page settings ---------------- */
 let pgLogo = '';
