@@ -50,6 +50,7 @@
     <span class="adminbar-label"><span class="dot" aria-hidden="true"></span>Modo edición <span class="meta-hide">· toca cualquier texto o prenda para cambiarlo</span></span>
     <div class="adminbar-actions">
       <button class="btn btn-sm btn-light" id="aNew" type="button">+ Prenda</button>
+      <button class="btn btn-sm btn-light" id="aSlide" type="button">+ Tarjeta</button>
       <button class="btn btn-sm btn-ghost-light" id="aPage" type="button">Logo y contacto</button>
       <button class="btn btn-sm btn-ghost-light" id="aHero" type="button">Portada</button>
       <button class="btn btn-sm btn-ghost-light" id="aBg" type="button">Fondos</button>
@@ -462,6 +463,48 @@
     <div class="ed-actions">
       <button class="btn btn-dark" type="submit">Guardar fondos</button>
       <button class="btn btn-ghost" type="button" id="bgReset">Restaurar todos</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Wheel card editor -->
+<dialog id="dlgSlide" class="dlg dlg-wide" aria-labelledby="slTitle">
+  <form id="slForm" class="ed" novalidate>
+    <div class="ed-preview sl-preview"><div class="sl-card" id="slPreview"></div><p class="form-help">Vista previa de la tarjeta (tamaño real en la rueda)</p></div>
+    <div class="ed-fields form">
+      <div class="drawer-head">
+        <h3 id="slTitle">Tarjeta de la rueda</h3>
+        <button class="iconbtn" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
+      </div>
+      <p class="form-help" id="slPos"></p>
+      <label for="slProduct">Producto que abre esta tarjeta</label>
+      <select id="slProduct"></select>
+      <p class="form-help">Al tocar la tarjeta se abre este producto con sus tallas, colores y precio.</p>
+      <label for="slText">Texto de la tarjeta</label>
+      <input id="slText" type="text" maxlength="60" placeholder="Usa el nombre del producto">
+      <span class="label">Imagen de la tarjeta</span>
+      <div class="photo-row">
+        <img id="slImg" alt="" hidden>
+        <label class="btn btn-sm btn-outline" for="slFile">Subir imagen completa</label>
+        <input id="slFile" type="file" accept="image/*" hidden>
+        <button class="btn btn-sm btn-ghost" type="button" id="slImgDel" hidden>Quitar imagen</button>
+      </div>
+      <p class="form-help">Cubre toda la tarjeta (vertical, 210 × 286, proporción 3:4). Sin imagen se usa la foto o el dibujo del producto.</p>
+      <span class="label" id="slBgLbl">Fondo de la tarjeta</span>
+      <div class="swatches" id="slBg" role="group" aria-labelledby="slBgLbl"><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Fondo #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Fondo #ffffff"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Fondo #e9e9e9"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Fondo #9b9b9b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Fondo #1f1f1f"></button><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Fondo #0b0b0b"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Fondo #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Fondo #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Fondo #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Fondo #14d600"></button><input type="color" id="slBgColor" aria-label="Otro color"><button type="button" class="btn btn-sm btn-ghost" id="slBgAuto">Automático</button></div>
+      <div class="ed-actions sl-move">
+        <button class="btn btn-sm btn-outline" type="button" id="slLeft">← Mover a la izquierda</button>
+        <button class="btn btn-sm btn-outline" type="button" id="slRight">Mover a la derecha →</button>
+      </div>
+      <p class="form-err" id="slErr" hidden></p>
+      <div class="ed-actions">
+        <button class="btn btn-dark" type="submit">Guardar tarjeta</button>
+        <button class="btn btn-ghost danger" type="button" id="slDel">Quitar tarjeta</button>
+      </div>
+      <div class="confirm" id="slConfirm" hidden>
+        <p>¿Quitar esta tarjeta de la rueda? El producto sigue en el catálogo.</p>
+        <div class="ed-actions"><button class="btn btn-danger" type="button" id="slDelYes">Sí, quitar</button><button class="btn btn-ghost" type="button" id="slDelNo">Conservar</button></div>
+      </div>
     </div>
   </form>
 </dialog>

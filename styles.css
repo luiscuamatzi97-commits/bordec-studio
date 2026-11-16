@@ -447,6 +447,18 @@ input[type="range"] { width: 100%; accent-color: var(--black); min-height: 44px;
 .hero[data-hide~="head"] .wheel { --top: 96px; }
 @media (max-width: 699.98px) { .hero[data-hide~="head"] .wheel { --top: 70px; } }
 
+/* ---------- Independent wheel cards ---------- */
+.wcard[data-ink="light"] .wcard-in { color: var(--light); }
+.wcard[data-ink="dark"] .wcard-in { color: #0b0b0b; }
+body.editing .wcard-in { outline: 2px dashed transparent; outline-offset: 4px; }
+body.editing .wcard:hover .wcard-in { outline-color: var(--blue); }
+.sl-preview { background: #e9e9e9; }
+.sl-card { position: relative; width: 210px; height: 286px; }
+.wcard.solo { position: absolute; inset: 0; left: 0; top: 0; width: 100%; height: 100%; margin: 0; transform: none; }
+.wcard.solo .wcard-in { transform: none; }
+.sl-move .btn:disabled { opacity: .4; cursor: not-allowed; }
+#slBg .sw { width: 30px; height: 30px; }
+
 @keyframes fadeOnly { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

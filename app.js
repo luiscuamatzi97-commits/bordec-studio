@@ -184,7 +184,7 @@ const colWord = c => String((S.col_words && S.col_words[c.slug]) || c.word).toUp
 const colText = (key, prop) => (S[key] && S[key][COL.slug]) || COL[prop];
 const wheel = $('#wheel'), wcards = $('#wheelCards');
 const TONES = ['light', 'black', 'white', 'graphite', 'red', 'light', 'gray', 'black', 'white', 'blue', 'graphite', 'light'];
-let SL = [], f = 0, curId = null, lastUser = -1e9, hovering = false;
+let SL = [], f = 0, curId = null, curKey = null, lastUser = -1e9, hovering = false;
 const mod = (a, n) => ((a % n) + n) % n;
 const idxOf = () => SL.length ? mod(Math.round(f), SL.length) : 0;
 const stepDeg = () => innerWidth < 700 ? 24 : 19;
@@ -200,14 +200,9 @@ function renderRoll() {
   $('#ringText').textContent = (`${S.name || DEF.name} • ${COL.title} • `).toUpperCase().repeat(2);
 }
 function renderWheel(keepId) {
-  const base = P.filter(p => p.collection === COL.slug && isApparel(p) && (p.visible || (editing && !preview))).sort(bySort);
-  // small collections repeat around the wheel so it always looks full
-  SL = []; while (base.length && SL.length < 10) SL.push(...base);
-  wcards.innerHTML = SL.map((p, i) => {
-    const vis = p.model_url ? `<span class="wcard-vis photo"><img src="${esc(p.model_url)}" alt="" loading="lazy"></span>` : `<span class="wcard-vis">${garmentSVG(p)}</span>`;
-    return `<button class="wcard" type="button" role="option" data-i="${i}" data-tone="${TONES[i % TONES.length]}" aria-label="${esc(p.name)}, ${priceLabel(p)}"><span class="wcard-in">${vis}<span class="wcard-lab"><span>${esc(p.name)}</span><span>${priceLabel(p)}</span></span></span></button>`;
-  }).join('');
-  const k = keepId ? SL.findIndex(p => p.id === keepId) : -1;
+  SL = slidesOf(COL).map(s => ({ ...s, p: P.find(x => x.id === s.product_id) || null }));
+  wcards.innerHTML = SL.map((s, i) => slideHTML(s, i)).join('');
+  const k = keepId ? SL.findIndex(s => s.key === keepId || (s.p && s.p.id === keepId)) : -1;
   f = k >= 0 ? k : 0;
   layoutW(true); selectW(true);
 }
@@ -231,11 +226,12 @@ function layoutW(instant) {
   }
 }
 function selectW(force) {
-  const p = SL[idxOf()];
-  if (!p) { $('#wName').textContent = 'Pronto habrá diseños aquí'; $('#wPrice').textContent = ''; $('#wOpen').hidden = true; return; }
-  if (!force && p.id === curId) return;
-  curId = p.id; $('#wOpen').hidden = false;
-  $('#wName').textContent = p.name;
+  const s = SL[idxOf()], p = s && s.p;
+  if (!s) { $('#wName').textContent = editing ? 'Agrega tarjetas con «+ Tarjeta»' : 'Pronto habrá diseños aquí'; $('#wPrice').textContent = ''; $('#wOpen').hidden = true; curKey = null; return; }
+  if (!force && s.key === curKey) return;
+  curKey = s.key; curId = p ? p.id : null; $('#wOpen').hidden = !p;
+  $('#wName').textContent = s.text || (p ? p.name : '');
+  if (!p) { $('#wPrice').textContent = ''; return; }
   $('#wPrice').textContent = `${priceLabel(p)}${p.wholesale_price && p.wholesale_min ? ` · mayoreo ${fmt(p.wholesale_price)} desde ${p.wholesale_min} pzs` : ''}`;
 }
 function goTo(i) {
@@ -264,13 +260,14 @@ wheel.addEventListener('pointerup', e => {
   if (drag.moved) { f = Math.round(f - Math.max(-2, Math.min(2, drag.v * 1.5))); layoutW(); selectW(); return; }
   const c = e.target.closest('.wcard'); if (!c) return;
   const i = +c.dataset.i;
-  if (i === idxOf()) openProduct(SL[i].id); else goTo(i);
+  if (editing && !preview) { goTo(i); openSlide(i); return; }
+  if (i === idxOf()) { if (SL[i].p) openProduct(SL[i].p.id); } else goTo(i);
 });
 wheel.addEventListener('pointercancel', () => { if (drag.on) { drag.on = false; wheel.classList.remove('dragging'); f = Math.round(f); layoutW(); selectW(); } });
 wheel.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight') { stepW(1); touch(); e.preventDefault(); }
   if (e.key === 'ArrowLeft') { stepW(-1); touch(); e.preventDefault(); }
-  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.wcard')) { e.preventDefault(); openProduct(SL[idxOf()].id); }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.wcard')) { e.preventDefault(); const s = SL[idxOf()]; if (editing && !preview) openSlide(idxOf()); else if (s && s.p) openProduct(s.p.id); }
 });
 wheel.addEventListener('pointerenter', () => { hovering = true; });
 wheel.addEventListener('pointerleave', () => { hovering = false; });
@@ -725,6 +722,81 @@ $('#bgReset').addEventListener('click', () => { bgDraft = {}; $$('#bgForm .bgrow
 $('#bgForm').addEventListener('submit', async e => { e.preventDefault(); if (await saveSettings({ bg: bgDraft })) $('#dlgBg').close(); });
 $('#dlgBg').addEventListener('close', () => applyBgs());
 $('#aBg').addEventListener('click', openBg);
+
+
+/* ---------------- Wheel cards (independent, editable) ---------------- */
+const uid = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function slidesOf(c) {
+  const saved = S.slides && S.slides[c.slug];
+  if (Array.isArray(saved)) return saved.filter(s => s && s.key);
+  // default: one card per product of the collection (no repeats)
+  return P.filter(p => p.collection === c.slug && isApparel(p) && p.visible).sort(bySort).map(p => ({ key: 'p-' + p.id, product_id: p.id }));
+}
+function slideHTML(s, i, solo) {
+  const p = s.p, img = s.image || (p && p.model_url);
+  const vis = img ? `<span class="wcard-vis photo"><img src="${esc(img)}" alt="" loading="lazy"></span>` : (p ? `<span class="wcard-vis">${garmentSVG(p)}</span>` : '<span class="wcard-vis"></span>');
+  const tone = s.bg ? '' : TONES[i % TONES.length];
+  const ink = s.bg ? (lum(s.bg) < 140 ? 'light' : 'dark') : '';
+  const text = s.text || (p ? p.name : 'Tarjeta sin producto');
+  const price = p ? priceLabel(p) : '';
+  const inner = `<span class="wcard-in"${s.bg ? ` style="background:${esc(s.bg)}"` : ''}>${vis}<span class="wcard-lab"><span>${esc(text)}</span><span>${price}</span></span></span>`;
+  return solo ? `<span class="wcard solo" data-tone="${tone}" data-ink="${ink}">${inner}</span>`
+    : `<button class="wcard" type="button" role="option" data-i="${i}" data-tone="${tone}" data-ink="${ink}" aria-label="${esc(text)}${price ? ', ' + price : ''}">${inner}</button>`;
+}
+let slIdx = -1, slDraft = null, slList = null;
+function editableSlides() { return slidesOf(COL).map(s => ({ ...s })); }
+function openSlide(i, isNew) {
+  slList = editableSlides();
+  if (isNew) { slList.splice(Math.min(slList.length, i + 1), 0, { key: uid(), product_id: null }); i = Math.min(slList.length - 1, i + 1); }
+  slIdx = i; slDraft = { ...slList[i] };
+  const opts = P.filter(p => p.visible || editing).sort((a, b) => (a.collection === COL.slug ? -1 : 0) - (b.collection === COL.slug ? -1 : 0) || bySort(a, b));
+  $('#slProduct').innerHTML = '<option value="">Ninguno (solo imagen)</option>' + opts.map(p => `<option value="${p.id}">${esc(p.name)}${p.collection === COL.slug ? '' : ' · ' + esc(p.category)}</option>`).join('');
+  $('#slProduct').value = slDraft.product_id || '';
+  $('#slText').value = slDraft.text || '';
+  $('#slErr').hidden = true; $('#slConfirm').hidden = true;
+  slRefresh(); $('#dlgSlide').showModal();
+}
+function slRefresh() {
+  $('#slPos').textContent = `Colección «${COL.title}» · tarjeta ${slIdx + 1} de ${slList.length}`;
+  const p = P.find(x => x.id === slDraft.product_id) || null;
+  $('#slPreview').innerHTML = slideHTML({ ...slDraft, p }, slIdx, true);
+  const im = $('#slImg'); im.hidden = !slDraft.image; if (slDraft.image) im.src = slDraft.image; $('#slImgDel').hidden = !slDraft.image;
+  markSw('#slBg', slDraft.bg || ''); $('#slBgColor').value = /^#[0-9a-f]{6}$/i.test(slDraft.bg || '') ? slDraft.bg : '#f4f4f4';
+  $('#slLeft').disabled = slIdx <= 0; $('#slRight').disabled = slIdx >= slList.length - 1;
+}
+async function saveSlides(list, keepKey) {
+  const ok = await saveSettings({ slides: { ...(S.slides || {}), [COL.slug]: list.map(({ key, product_id, image, bg, text }) => ({ key, product_id: product_id || null, image: image || null, bg: bg || null, text: text || '' })) } });
+  if (ok) renderWheel(keepKey);
+  return ok;
+}
+$('#slProduct').addEventListener('change', () => { slDraft.product_id = $('#slProduct').value || null; slRefresh(); });
+$('#slText').addEventListener('input', () => { slDraft.text = $('#slText').value.trim(); slRefresh(); });
+$('#slBg').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { slDraft.bg = b.dataset.c; slRefresh(); } if (e.target.closest('#slBgAuto')) { slDraft.bg = null; slRefresh(); } });
+$('#slBgColor').addEventListener('input', e => { slDraft.bg = e.target.value; slRefresh(); });
+$('#slFile').addEventListener('change', async e => {
+  const fl = e.target.files[0]; if (!fl) return; toast('Subiendo imagen…');
+  try { slDraft.image = await upload(fl, 'slides', 1400); slRefresh(); toast('Imagen lista. Guarda la tarjeta para publicarla.'); }
+  catch (err) { toast('No se pudo subir la imagen. Prueba con un JPG o PNG de menos de 5 MB.', true); }
+  e.target.value = '';
+});
+$('#slImgDel').addEventListener('click', () => { slDraft.image = null; slRefresh(); });
+const slMove = d => { const t = slIdx + d; if (t < 0 || t >= slList.length) return; slList[slIdx] = slDraft; [slList[slIdx], slList[t]] = [slList[t], slList[slIdx]]; slIdx = t; slRefresh(); };
+$('#slLeft').addEventListener('click', () => slMove(-1));
+$('#slRight').addEventListener('click', () => slMove(1));
+$('#slForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!slDraft.product_id && !slDraft.image) { $('#slErr').hidden = false; $('#slErr').textContent = 'Elige un producto o sube una imagen para la tarjeta.'; return; }
+  slList[slIdx] = slDraft;
+  if (await saveSlides(slList, slDraft.key)) { $('#dlgSlide').close(); toast('Tarjeta guardada'); }
+});
+$('#slDel').addEventListener('click', () => { $('#slConfirm').hidden = false; $('#slDelYes').focus(); });
+$('#slDelNo').addEventListener('click', () => { $('#slConfirm').hidden = true; });
+$('#slDelYes').addEventListener('click', async () => {
+  const list = slList.filter((_, i) => i !== slIdx);
+  const next = list[Math.min(slIdx, list.length - 1)];
+  if (await saveSlides(list, next && next.key)) { $('#dlgSlide').close(); toast('Tarjeta quitada'); }
+});
+$('#aSlide').addEventListener('click', () => openSlide(SL.length ? idxOf() : -1, true));
 
 /* ---------------- Admin: page settings ---------------- */
 let pgLogo = '';
