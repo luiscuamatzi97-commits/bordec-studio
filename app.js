@@ -234,12 +234,25 @@ function selectW(force) {
   if (!p) { $('#wPrice').textContent = ''; return; }
   $('#wPrice').textContent = `${priceLabel(p)}${p.wholesale_price && p.wholesale_min ? ` · mayoreo ${fmt(p.wholesale_price)} desde ${p.wholesale_min} pzs` : ''}`;
 }
+// with 4 cards or fewer the wheel does not loop: positions stay between the first and last card
+const loops = () => SL.length > 4;
+const clampF = () => { if (!loops()) f = Math.max(0, Math.min(SL.length - 1, f)); };
 function goTo(i) {
   if (!SL.length) return;
+  if (!loops()) { f = i; layoutW(); selectW(); return; }
   const n = SL.length; let delta = mod(i - f, n); if (delta > n / 2) delta -= n;
   f = Math.round(f + delta); layoutW(); selectW();
 }
-const stepW = dir => { f = Math.round(f) + dir; layoutW(); selectW(); };
+let autoDir = 1;
+const stepW = (dir, auto) => {
+  if (!SL.length) return;
+  if (!loops()) {
+    let t = Math.round(f) + dir;
+    if (t < 0 || t > SL.length - 1) { if (!auto) return; autoDir = -autoDir; t = Math.round(f) + autoDir; }
+    f = Math.max(0, Math.min(SL.length - 1, t));
+  } else f = Math.round(f) + dir;
+  layoutW(); selectW();
+};
 const touch = () => { lastUser = performance.now(); };
 
 const drag = { on: false, x: 0, f0: 0, moved: false, id: null, t: 0, lx: 0, v: 0 };
@@ -253,31 +266,34 @@ wheel.addEventListener('pointermove', e => {
   if (!drag.moved && Math.abs(dx) > 6) { drag.moved = true; wheel.classList.add('dragging'); try { wheel.setPointerCapture(e.pointerId); } catch (_) {} }
   if (!drag.moved) return;
   const now = performance.now(); drag.v = (e.clientX - drag.lx) / Math.max(1, now - drag.t); drag.lx = e.clientX; drag.t = now;
-  f = drag.f0 - dx / (radius() * stepDeg() * Math.PI / 180); layoutW(true);
+  f = drag.f0 - dx / (radius() * stepDeg() * Math.PI / 180);
+  if (!loops()) f = Math.max(-0.35, Math.min(SL.length - 0.65, f));
+  layoutW(true);
 });
 wheel.addEventListener('pointerup', e => {
   if (!drag.on) return; drag.on = false; wheel.classList.remove('dragging'); touch();
-  if (drag.moved) { f = Math.round(f - Math.max(-2, Math.min(2, drag.v * 1.5))); layoutW(); selectW(); return; }
+  if (drag.moved) { f = Math.round(f - Math.max(-2, Math.min(2, drag.v * 1.5))); clampF(); layoutW(); selectW(); return; }
   const c = e.target.closest('.wcard'); if (!c) return;
   const i = +c.dataset.i;
   if (editing && !preview) { goTo(i); openSlide(i); return; }
-  if (i === idxOf()) { if (SL[i].p) openProduct(SL[i].p.id); } else goTo(i);
+  if (i === idxOf()) openCard(SL[i]); else goTo(i);
 });
-wheel.addEventListener('pointercancel', () => { if (drag.on) { drag.on = false; wheel.classList.remove('dragging'); f = Math.round(f); layoutW(); selectW(); } });
+wheel.addEventListener('pointercancel', () => { if (drag.on) { drag.on = false; wheel.classList.remove('dragging'); f = Math.round(f); clampF(); layoutW(); selectW(); } });
+wheel.addEventListener('dragstart', e => e.preventDefault());
 wheel.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight') { stepW(1); touch(); e.preventDefault(); }
   if (e.key === 'ArrowLeft') { stepW(-1); touch(); e.preventDefault(); }
-  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.wcard')) { e.preventDefault(); const s = SL[idxOf()]; if (editing && !preview) openSlide(idxOf()); else if (s && s.p) openProduct(s.p.id); }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.wcard')) { e.preventDefault(); const s = SL[idxOf()]; if (editing && !preview) openSlide(idxOf()); else if (s) openCard(s); }
 });
 wheel.addEventListener('pointerenter', () => { hovering = true; });
 wheel.addEventListener('pointerleave', () => { hovering = false; });
 $('#wPrev').addEventListener('click', () => { stepW(-1); touch(); });
 $('#wNext').addEventListener('click', () => { stepW(1); touch(); });
-$('#wOpen').addEventListener('click', () => { if (curId) openProduct(curId); });
+$('#wOpen').addEventListener('click', () => { const s = SL[idxOf()]; if (s) openCard(s); });
 setInterval(() => {
   if (RM.matches || hovering || drag.on || document.hidden || $('dialog[open]') || editing) return;
   if (performance.now() - lastUser < 9000 || SL.length < 2) return;
-  stepW(1);
+  stepW(loops() ? 1 : autoDir, true);
 }, 3400);
 addEventListener('resize', () => layoutW(true));
 
@@ -330,11 +346,17 @@ $('#grid').addEventListener('keydown', e => { const o = e.target.closest('.card-
 
 /* ---------------- Product detail ---------------- */
 let cur = null; const pd = { size: null, color: 0 };
-function openProduct(id) {
+let curImg = null;
+function openCard(s) {
+  const img = s.image || (s.p && s.p.model_url) || null;
+  if (s.p) return openProduct(s.p.id, img);
+  if (img) { $('#imgView').src = img; $('#imgView').alt = s.text || ''; $('#imgCap').textContent = s.text || ''; $('#dlgImg').showModal(); }
+}
+function openProduct(id, img) {
   if (editing && !preview) return openEditor(id);
   const p = P.find(x => x.id === id); if (!p) return;
-  cur = p; pd.size = null; pd.color = 0;
-  $('#pdVisual').innerHTML = p.model_url ? `<img class="pd-photo" src="${esc(p.model_url)}" alt="${esc(p.name)}">` : garmentSVG(p);
+  cur = p; pd.size = null; pd.color = 0; curImg = img || p.model_url || null;
+  $('#pdVisual').innerHTML = curImg ? `<img class="pd-photo" src="${esc(curImg)}" alt="${esc(p.name)}">` : garmentSVG(p);
   $('#pdCat').textContent = p.category; $('#pdName').textContent = p.name;
   $('#pdBadge').hidden = !p.badge; $('#pdBadge').textContent = p.badge || '';
   $('#pdDesc').textContent = p.description || '';
@@ -351,7 +373,7 @@ function pdTotal() {
   $('#pdWa').hidden = !wa; if (wa) $('#pdWa').href = wa;
 }
 $('#pdSizes').addEventListener('click', e => { const b = e.target.closest('[data-size]'); if (!b) return; pd.size = b.dataset.size; renderOptions('pd', cur, pd); pdTotal(); });
-$('#pdColors').addEventListener('click', e => { const b = e.target.closest('[data-color]'); if (!b) return; pd.color = +b.dataset.color; renderOptions('pd', cur, pd); if (!cur.model_url) $('#pdVisual').innerHTML = garmentSVG(cur, { color: colorsOf(cur)[pd.color].h }); pdTotal(); });
+$('#pdColors').addEventListener('click', e => { const b = e.target.closest('[data-color]'); if (!b) return; pd.color = +b.dataset.color; renderOptions('pd', cur, pd); if (!curImg) $('#pdVisual').innerHTML = garmentSVG(cur, { color: colorsOf(cur)[pd.color].h }); pdTotal(); });
 $('#pdQty').addEventListener('input', pdTotal);
 $('#pdMinus').addEventListener('click', () => { $('#pdQty').value = Math.max(1, (+$('#pdQty').value || 1) - 1); pdTotal(); });
 $('#pdPlus').addEventListener('click', () => { $('#pdQty').value = (+$('#pdQty').value || 0) + 1; pdTotal(); });
@@ -796,7 +818,7 @@ function slidesOf(c) {
 }
 function slideHTML(s, i, solo) {
   const p = s.p, img = s.image || (p && p.model_url);
-  const vis = img ? `<span class="wcard-vis photo"><img src="${esc(img)}" alt="" loading="lazy"></span>` : (p ? `<span class="wcard-vis">${garmentSVG(p)}</span>` : '<span class="wcard-vis"></span>');
+  const vis = img ? `<span class="wcard-vis photo"><img src="${esc(img)}" alt="" loading="lazy" draggable="false"></span>` : (p ? `<span class="wcard-vis">${garmentSVG(p)}</span>` : '<span class="wcard-vis"></span>');
   const tone = s.bg ? '' : TONES[i % TONES.length];
   const ink = s.bg ? (lum(s.bg) < 140 ? 'light' : 'dark') : '';
   const text = s.text || (p ? p.name : 'Tarjeta sin producto');
