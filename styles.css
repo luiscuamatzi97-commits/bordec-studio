@@ -464,6 +464,14 @@ body.editing .wcard:hover .wcard-in { outline-color: var(--blue); }
 .wcard-vis.photo { padding: 0 !important; }
 .wcard-lab { display: none; }
 
+/* background images editor */
+.bgimg { display: grid; gap: 8px; }
+.bgimg .photo-row img { width: 96px; height: 56px; object-fit: cover; }
+.bgimg-opts { display: grid; gap: 6px; }
+.bgimg-o { display: flex; align-items: center; gap: 10px; font-size: var(--t-2); flex-wrap: wrap; }
+.bgimg-o select { flex: 1; min-height: 40px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--light); }
+.hero, .catalog, .facts-sec, .howto, .foot { background-clip: padding-box; }
+
 @keyframes fadeOnly { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

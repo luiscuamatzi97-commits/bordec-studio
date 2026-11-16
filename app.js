@@ -646,15 +646,23 @@ function applyHero(cfg) {
 const SECS = { page: ['body', 'light'], header: ['.top', 'light'], hero: ['#temporada', 'light'], facts: ['#datos', 'light'], catalog: ['#catalogo', 'light'], howto: ['#pedir', 'dark'], footer: ['#contacto', 'dark'] };
 const FLIP_TO_DARK = { '--black': '#f4f4f4', '--white': '#161616', '--gray-dark': '#b5b5b5', '--line': '#3a3a3a', '--light': '#262626', '--graphite': '#e9e9e9' };
 const FLIP_TO_LIGHT = { '--white': '#0b0b0b', '--muted-on-dark': '#5f5f5f', '--graphite': '#e2e2e2', '--graphite-2': '#d0d0d0', '--gray': '#6b6b6b' };
-function applyBgs(map) {
-  const bg = map || S.bg || {};
+function applyBgs(map, imgs) {
+  const bg = map || S.bg || {}, bi = imgs || S.bgimg || {};
   for (const [k, [sel, tone]] of Object.entries(SECS)) {
     const el = $(sel); if (!el) continue;
     for (const v of [...Object.keys(FLIP_TO_DARK), ...Object.keys(FLIP_TO_LIGHT)]) el.style.removeProperty(v);
-    el.style.removeProperty('background'); el.style.removeProperty('color');
-    const col = bg[k]; if (!col) continue;
-    el.style.background = col;
-    const now = lum(col) < 140 ? 'dark' : 'light';
+    for (const v of ['background', 'background-image', 'background-size', 'background-position', 'background-repeat', 'color']) el.style.removeProperty(v);
+    const col = bg[k], im = bi[k] && bi[k].url ? bi[k] : null;
+    if (!col && !im) continue;
+    if (col) el.style.background = col;
+    if (im) {
+      const shade = im.dim ? (im.ink === 'dark' ? 'linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.55)), ' : 'linear-gradient(rgba(0,0,0,.5), rgba(0,0,0,.5)), ') : '';
+      el.style.backgroundImage = `${shade}url("${String(im.url).replace(/"/g, '%22')}")`;
+      el.style.backgroundSize = im.fit === 'contain' ? 'contain' : 'cover';
+      el.style.backgroundRepeat = 'no-repeat';
+      el.style.backgroundPosition = 'center';
+    }
+    const now = im ? (im.ink === 'dark' ? 'light' : 'dark') : (lum(col) < 140 ? 'dark' : 'light');
     if (now !== tone) for (const [v, x] of Object.entries(now === 'dark' ? FLIP_TO_DARK : FLIP_TO_LIGHT)) el.style.setProperty(v, x);
     if (k === 'page') el.style.color = now === 'dark' ? '#f4f4f4' : '#0b0b0b';
   }
@@ -706,20 +714,53 @@ $('#aHero').addEventListener('click', openHero);
 $('#temporada').addEventListener('click', e => { if (editing && !preview && e.target.closest('.hero-top, .hero-titlebox, .hero-meta') && !e.target.closest('.tri')) { e.preventDefault(); openHero(); } }, true);
 
 /* ---------------- Admin: backgrounds editor ---------------- */
-let bgDraft = {};
+let bgDraft = {}, imgDraft = {};
+function bgImgControls(r) {
+  if (r.querySelector('.bgimg')) return;
+  const k = r.dataset.sec, d = document.createElement('div');
+  d.className = 'bgimg';
+  d.innerHTML = `<div class="photo-row"><img alt="" hidden><label class="btn btn-sm btn-outline" for="bgf-${k}">Poner imagen de fondo</label><input id="bgf-${k}" type="file" accept="image/*" hidden><button type="button" class="btn btn-sm btn-ghost bgimg-del" hidden>Quitar imagen</button></div>
+    <div class="bgimg-opts" hidden>
+      <label class="bgimg-o">Letras <select class="bgimg-ink"><option value="light">claras (imagen oscura)</option><option value="dark">oscuras (imagen clara)</option></select></label>
+      <label class="bgimg-o">Ajuste <select class="bgimg-fit"><option value="cover">Cubrir toda la sección</option><option value="contain">Mostrar completa</option></select></label>
+      <label class="check bgimg-o"><input type="checkbox" class="bgimg-dim"> Suavizar la imagen para que el texto se lea mejor</label>
+    </div>`;
+  r.appendChild(d);
+}
+function bgImgRefresh(r) {
+  const k = r.dataset.sec, im = imgDraft[k], box = r.querySelector('.bgimg');
+  const pic = box.querySelector('img'); pic.hidden = !im; if (im) pic.src = im.url;
+  box.querySelector('.bgimg-del').hidden = !im; box.querySelector('.bgimg-opts').hidden = !im;
+  if (im) { box.querySelector('.bgimg-ink').value = im.ink || 'light'; box.querySelector('.bgimg-fit').value = im.fit || 'cover'; box.querySelector('.bgimg-dim').checked = !!im.dim; }
+}
 function openBg() {
-  bgDraft = { ...(S.bg || {}) };
-  $$('#bgForm .bgrow').forEach(r => { const k = r.dataset.sec; markSw(`.bgrow[data-sec="${k}"]`, bgDraft[k]); r.querySelector('input[type=color]').value = /^#[0-9a-f]{6}$/i.test(bgDraft[k] || '') ? bgDraft[k] : '#f4f4f4'; });
+  bgDraft = { ...(S.bg || {}) }; imgDraft = JSON.parse(JSON.stringify(S.bgimg || {}));
+  $$('#bgForm .bgrow').forEach(r => { const k = r.dataset.sec; bgImgControls(r); bgImgRefresh(r); markSw(`.bgrow[data-sec="${k}"]`, bgDraft[k]); r.querySelector('input[type=color]').value = /^#[0-9a-f]{6}$/i.test(bgDraft[k] || '') ? bgDraft[k] : '#f4f4f4'; });
   $('#dlgBg').showModal();
 }
+$('#bgForm').addEventListener('change', async e => {
+  const r = e.target.closest('.bgrow'); if (!r) return; const k = r.dataset.sec;
+  if (e.target.type === 'file') {
+    const fl = e.target.files[0]; if (!fl) return; toast('Subiendo imagen…');
+    try { const url = await upload(fl, 'backgrounds', 2200); imgDraft[k] = { url, ink: (imgDraft[k] && imgDraft[k].ink) || 'light', fit: 'cover', dim: true }; bgImgRefresh(r); applyBgs(bgDraft, imgDraft); toast('Imagen lista. Toca «Guardar fondos» para publicarla.'); }
+    catch (err) { toast('No se pudo subir la imagen. Prueba con un JPG o PNG de menos de 5 MB.', true); }
+    e.target.value = ''; return;
+  }
+  const im = imgDraft[k]; if (!im) return;
+  if (e.target.classList.contains('bgimg-ink')) im.ink = e.target.value;
+  if (e.target.classList.contains('bgimg-fit')) im.fit = e.target.value;
+  if (e.target.classList.contains('bgimg-dim')) im.dim = e.target.checked;
+  applyBgs(bgDraft, imgDraft);
+});
 $('#bgForm').addEventListener('click', e => {
   const r = e.target.closest('.bgrow'); if (!r) return; const k = r.dataset.sec;
-  const b = e.target.closest('[data-c]'); if (b) { bgDraft[k] = b.dataset.c; markSw(`.bgrow[data-sec="${k}"]`, b.dataset.c); applyBgs(bgDraft); }
-  if (e.target.closest('.bg-reset')) { delete bgDraft[k]; markSw(`.bgrow[data-sec="${k}"]`, ''); applyBgs(bgDraft); }
+  const b = e.target.closest('[data-c]'); if (b) { bgDraft[k] = b.dataset.c; markSw(`.bgrow[data-sec="${k}"]`, b.dataset.c); applyBgs(bgDraft, imgDraft); }
+  if (e.target.closest('.bg-reset')) { delete bgDraft[k]; delete imgDraft[k]; markSw(`.bgrow[data-sec="${k}"]`, ''); bgImgRefresh(r); applyBgs(bgDraft, imgDraft); }
+  if (e.target.closest('.bgimg-del')) { delete imgDraft[k]; bgImgRefresh(r); applyBgs(bgDraft, imgDraft); }
 });
-$('#bgForm').addEventListener('input', e => { const r = e.target.closest('.bgrow'); if (!r || e.target.type !== 'color') return; bgDraft[r.dataset.sec] = e.target.value; markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, ''); applyBgs(bgDraft); });
-$('#bgReset').addEventListener('click', () => { bgDraft = {}; $$('#bgForm .bgrow').forEach(r => markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, '')); applyBgs(bgDraft); });
-$('#bgForm').addEventListener('submit', async e => { e.preventDefault(); if (await saveSettings({ bg: bgDraft })) $('#dlgBg').close(); });
+$('#bgForm').addEventListener('input', e => { const r = e.target.closest('.bgrow'); if (!r || e.target.type !== 'color') return; bgDraft[r.dataset.sec] = e.target.value; markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, ''); applyBgs(bgDraft, imgDraft); });
+$('#bgReset').addEventListener('click', () => { bgDraft = {}; imgDraft = {}; $$('#bgForm .bgrow').forEach(r => { markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, ''); bgImgRefresh(r); }); applyBgs(bgDraft, imgDraft); });
+$('#bgForm').addEventListener('submit', async e => { e.preventDefault(); if (await saveSettings({ bg: bgDraft, bgimg: imgDraft })) $('#dlgBg').close(); });
 $('#dlgBg').addEventListener('close', () => applyBgs());
 $('#aBg').addEventListener('click', openBg);
 
