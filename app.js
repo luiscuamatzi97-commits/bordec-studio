@@ -181,7 +181,7 @@ function renderFacts() {
     { bg: '#1f1f1f', big: String(season).padStart(2, '0'), small: 'Diseños en nuestras colecciones de temporada', icon: 'shirt' }
   ];
   const tiles = factsList();
-  $('#facts').innerHTML = tiles.map((t, i) => factHTML(t, i)).join('') + (editing && !preview ? '<button class="fact-add" type="button" id="factAdd">+ Recuadro</button>' : '');
+  $('#facts').innerHTML = tiles.map((t, i) => factHTML(t, i)).join('') + (editing && !preview ? '<button class="fact-add" type="button" id="factAdd">+ Recuadro</button>' : ''); requestAnimationFrame(fitFacts);
 }
 let FACT_AUTO = [];
 const FACT_POS = { big: [7, 9], small: [7, 66], icon: [76, 9] };
@@ -204,6 +204,25 @@ const FICONS = {
 };
 const iconSVG = (name, col) => FICONS[name] ? `<svg viewBox="0 0 24 24" fill="none" stroke="${col || 'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${FICONS[name]}</svg>` : '';
 const inkFor = bg => lum(bg || '#ffffff') < 140 ? '#f4f4f4' : '#0b0b0b';
+function fitFacts() {
+  for (const tile of $$('#facts .fact.fx, .fx-prev-box .fact.fx')) {
+    const big = tile.querySelector('[data-el="big"]'); if (!big) continue;
+    big.style.fontSize = '';
+    const T = tile.getBoundingClientRect(), ic = tile.querySelector('[data-el="icon"]');
+    if (!T.width) continue;
+    let fs = parseFloat(getComputedStyle(big).fontSize); const min = fs * .55;
+    for (let n = 0; n < 24; n++) {
+      const B = big.getBoundingClientRect(); let lim = T.right - 14;
+      if (ic) { const I = ic.getBoundingClientRect(); if (I.left > B.left + 8 && I.top < B.bottom && I.bottom > B.top) lim = Math.min(lim, I.left - 10); }
+      if (B.right <= lim || fs <= min) break;
+      fs = Math.max(min, fs * .94); big.style.fontSize = fs + 'px';
+    }
+  }
+}
+let fitRaf = 0;
+addEventListener('resize', () => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fitFacts); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitFacts());
+
 function factHTML(t, i) {
   const ink = t.ink === 'light' ? '#f4f4f4' : t.ink === 'dark' ? '#0b0b0b' : inkFor(t.bg);
   const pos = (k) => { const p = (t.pos && t.pos[k]) || FACT_POS[k]; return `left:${p[0]}%;top:${p[1]}%`; };
@@ -708,12 +727,21 @@ function applyHero(cfg) {
 
 /* ---------------- Section backgrounds (editable) ---------------- */
 const SECS = { page: ['body', 'light'], header: ['.top', 'light'], hero: ['#temporada', 'light'], facts: ['#datos', 'light'], catalog: ['#catalogo', 'light'], howto: ['#pedir', 'dark'], footer: ['#contacto', 'dark'] };
-const FLIP_TO_DARK = { '--black': '#f4f4f4', '--white': '#161616', '--gray-dark': '#b5b5b5', '--line': '#3a3a3a', '--light': '#262626', '--graphite': '#e9e9e9' };
+const FLIP_TO_DARK = { '--black': '#f4f4f4', '--white': '#161616', '--muted-on-dark': '#5f5f5f', '--gray-dark': '#b5b5b5', '--line': '#3a3a3a', '--light': '#262626', '--graphite': '#e9e9e9' };
 const FLIP_TO_LIGHT = { '--white': '#0b0b0b', '--muted-on-dark': '#5f5f5f', '--graphite': '#e2e2e2', '--graphite-2': '#d0d0d0', '--gray': '#6b6b6b' };
 const BG_DEF = { page: '#f4f4f4', header: '#f4f4f4', hero: '#e9e9e9', facts: '#f4f4f4', catalog: '#f4f4f4', howto: '#0b0b0b', footer: '#0b0b0b' };
 const rgba = (hex, a) => { const n = parseInt(String(hex).slice(1), 16); return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`; };
+const ROOT_TOK = {}, OWN_BG = new Set(['header', 'hero', 'howto', 'footer']); // sections that paint their own ground
+function restoreTokens(el) {
+  const cs = getComputedStyle(document.documentElement);
+  for (const v of new Set([...Object.keys(FLIP_TO_DARK), ...Object.keys(FLIP_TO_LIGHT)])) {
+    if (!(v in ROOT_TOK)) ROOT_TOK[v] = cs.getPropertyValue(v).trim();
+    if (ROOT_TOK[v]) el.style.setProperty(v, ROOT_TOK[v]);
+  }
+}
 function applyBgs(map, imgs, fx) {
   const bg = map || S.bg || {}, bi = imgs || S.bgimg || {}, ef = fx || S.bgfx || {};
+  let pageFlip = false;
   document.body.classList.toggle('hdr-see', !!(ef.header && ef.header.alpha < 100));
   for (const [k, [sel, tone]] of Object.entries(SECS)) {
     const el = $(sel); if (!el) continue;
@@ -735,7 +763,13 @@ function applyBgs(map, imgs, fx) {
     const base = bg[k] || BG_DEF[k];
     const now = im ? (im.ink === 'dark' ? 'light' : 'dark') : (lum(base) < 140 ? 'dark' : 'light');
     if (now !== tone) for (const [v, x] of Object.entries(now === 'dark' ? FLIP_TO_DARK : FLIP_TO_LIGHT)) el.style.setProperty(v, x);
-    if (k === 'page') el.style.color = now === 'dark' ? '#f4f4f4' : '#0b0b0b';
+    else if (k !== 'page' && pageFlip) restoreTokens(el);
+    if (k === 'page') { el.style.color = now === 'dark' ? '#f4f4f4' : '#0b0b0b'; pageFlip = now !== tone; }
+  }
+  // sections left at their default colors must not inherit a flipped page palette
+  if (pageFlip) for (const [k, [sel]] of Object.entries(SECS)) {
+    if (!OWN_BG.has(k) || bg[k] || (bi[k] && bi[k].url) || (ef[k] && ef[k].alpha < 100)) continue;
+    const el = $(sel); if (el) restoreTokens(el);
   }
 }
 
