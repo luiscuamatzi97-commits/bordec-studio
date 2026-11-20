@@ -134,6 +134,10 @@ function garmentSVG(p, opt = {}) {
   return wrap(opt.bare ? body : `${hanger}${extra ? '' : ''}${body}${bar}`);
 }
 
+/* ---------------- Swatches: the colour is data, painted here ---------------- */
+function paintSwatches(root) { $$('.sw[data-c]', root || document).forEach(s => { s.style.background = s.dataset.c; }); }
+paintSwatches();
+
 /* ---------------- Settings / text ---------------- */
 const FAV_DEF = document.getElementById('favicon')?.getAttribute('href');
 function setFavicon(url) {
@@ -147,9 +151,11 @@ function applySettings() {
   $$('[data-k]').forEach(el => { if (document.activeElement !== el) el.textContent = S[el.dataset.k] ?? DEF[el.dataset.k] ?? ''; });
   document.title = S.name || DEF.name;
   applyHero(); applyBgs();
-  const logo = $('#logo');
-  if (S.logo_url) { logo.src = S.logo_url; logo.alt = S.name; logo.hidden = false; $('#wordmark').hidden = true; }
-  else { logo.hidden = true; $('#wordmark').hidden = false; }
+  let logo = $('#logo');
+  if (S.logo_url) {
+    if (!logo) { logo = document.createElement('img'); logo.id = 'logo'; $('#wordmark').before(logo); }
+    logo.src = S.logo_url; logo.alt = S.name || DEF.name; logo.hidden = false; $('#wordmark').hidden = true;
+  } else { if (logo) logo.remove(); $('#wordmark').hidden = false; }
   setFavicon(S.favicon_url || S.logo_url);
   $('#year').textContent = new Date().getFullYear();
   const wa = waLink(`Hola ${S.name}, quiero información sobre sus prendas.`);
@@ -258,7 +264,7 @@ function renderRoll() {
   $('#rollWord').innerHTML = [...w].map((c, i) => c === ' ' ? `<span class="ch sp" style="--i:${i}"></span>`
     : `<span class="ch" style="--i:${i}"><span class="fc">${esc(c)}</span><span class="fc f1 outline">${esc(c)}</span><span class="fc f2">${esc(c)}</span><span class="fc f3 outline">${esc(c)}</span></span>`).join('');
   $('#heroTitle').setAttribute('aria-label', `${COL.title} · ${S.name || DEF.name}`);
-  $('#ringText').textContent = (`${S.name || DEF.name} • ${COL.title} • `).toUpperCase().repeat(2);
+  $('#ringText').textContent = (`${S.name || DEF.name}   +   ${COL.title}   +   `).repeat(2);
 }
 function renderWheel(keepId) {
   SL = slidesOf(COL).map(s => ({ ...s, p: P.find(x => x.id === s.product_id) || null }));
@@ -293,7 +299,7 @@ function selectW(force) {
   curKey = s.key; curId = p ? p.id : null; $('#wOpen').hidden = !p;
   $('#wName').textContent = s.text || (p ? p.name : '');
   if (!p) { $('#wPrice').textContent = ''; return; }
-  $('#wPrice').textContent = `${priceLabel(p)}${p.wholesale_price && p.wholesale_min ? ` · mayoreo ${fmt(p.wholesale_price)} desde ${p.wholesale_min} pzs` : ''}`;
+  $('#wPrice').innerHTML = `<span>${esc(priceLabel(p))}</span>${p.wholesale_price && p.wholesale_min ? `<span>Mayoreo ${fmt(p.wholesale_price)} desde ${p.wholesale_min} pzs</span>` : ''}`;
 }
 // with 4 cards or fewer the wheel does not loop: positions stay between the first and last card
 const loops = () => SL.length > 4;
@@ -381,7 +387,7 @@ function renderCatalog() {
   $('#catList').innerHTML = Object.keys(counts).map(c => `<option value="${esc(c)}">`).join('');
 }
 function card(p) {
-  const ws = p.wholesale_price && p.wholesale_min ? `<span class="card-ws">Mayoreo ${fmt(p.wholesale_price)} · ${p.wholesale_min}+ pzs</span>` : '';
+  const ws = p.wholesale_price && p.wholesale_min ? `<span class="card-ws"><span>Mayoreo ${fmt(p.wholesale_price)}</span><span>${p.wholesale_min}+ pzs</span></span>` : '';
   const action = editing && !preview ? `<button class="btn btn-dark card-add" type="button" data-edit="${p.id}">Editar</button>`
     : `<button class="btn btn-dark card-add" type="button" data-open="${p.id}">${sizesOf(p).length > 1 || colorsOf(p).length > 1 ? 'Elegir' : 'Agregar'}</button>`;
   return `<article class="card">
@@ -455,7 +461,7 @@ function renderBag() {
   $('#bagCount').textContent = n; $('#bagCount').classList.toggle('has', n > 0);
   $('#bagList').innerHTML = L.length ? L.map((b, i) => {
     const tq = qtyOfProduct(b.id), u = unitPrice(b.p, tq), isWs = u < b.p.price;
-    const opts = [b.size && `Talla ${b.size}`, b.cn && b.cn].filter(Boolean).join(' · ');
+    const opts = [b.size && `Talla ${b.size}`, b.cn && b.cn].filter(Boolean).join(', ');
     return `<div class="bag-item">
       <div class="bag-thumb">${garmentSVG(b.p, { color: b.ch || undefined })}</div>
       <div><p class="bag-name">${esc(b.p.name)}</p><p class="bag-meta">${esc(opts)}${opts ? '<br>' : ''}${Number(b.p.price) > 0 ? `<span class="${isWs ? 'ws' : ''}">${fmt(u)} c/u${isWs ? ' · mayoreo' : ''}</span>` : 'A cotizar'}</p>

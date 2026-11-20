@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap">
-<link rel="stylesheet" href="styles.css?v=202611181623">
+<link rel="stylesheet" href="styles.css?v=202611200452">
 <link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230b0b0b'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23f4f4f4' stroke-width='2.4' stroke-dasharray='3 2.4'/%3E%3C/svg%3E">
 </head>
 <body>
@@ -56,7 +56,7 @@
 
 <div id="adminbar" class="adminbar" hidden>
   <div class="adminbar-in">
-    <span class="adminbar-label"><span class="dot" aria-hidden="true"></span>Modo edición <span class="meta-hide">· toca cualquier texto o prenda para cambiarlo</span></span>
+    <span class="adminbar-label">Modo edición:<span class="meta-hide">toca cualquier texto o prenda para cambiarlo</span></span>
     <div class="adminbar-actions">
       <button class="btn btn-sm btn-light" id="aNew" type="button">+ Prenda</button>
       <button class="btn btn-sm btn-light" id="aSlide" type="button">+ Tarjeta</button>
@@ -73,8 +73,7 @@
 <header class="top" id="top">
   <div class="wrap top-in">
     <a class="brand" href="#avengers-doomsday" aria-label="Inicio">
-      <img id="logo" alt="" hidden>
-      <span id="wordmark" class="wordmark" data-k="name">Bordec Studio</span>
+            <span id="wordmark" class="wordmark" data-k="name">Bordec Studio</span>
     </a>
     <nav class="nav" aria-label="Secciones">
       <a href="#avengers-doomsday" data-col="avengers-doomsday">Avengers Doomsday</a>
@@ -123,7 +122,7 @@
       <div class="wheel-ring" aria-hidden="true">
         <svg viewBox="0 0 400 400"><defs><path id="ringPath" d="M200 200 m-170 0 a170 170 0 1 1 340 0 a170 170 0 1 1 -340 0"/></defs>
           <circle cx="200" cy="200" r="196" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 6"/>
-          <text><textPath href="#ringPath" id="ringText">BORDEC STUDIO • TEMPORADA 26 • BORDEC STUDIO • TEMPORADA 26 • </textPath></text>
+          <text><textPath href="#ringPath" id="ringText">Bordec Studio   +   Temporada 26   +   Bordec Studio   +   Temporada 26   +   </textPath></text>
         </svg>
       </div>
       <div class="wheel-cards" id="wheelCards"></div>
@@ -301,14 +300,14 @@
       <div class="swatches" id="edSwatches" role="group" aria-labelledby="edColorLbl"></div>
       <span class="label">Diseño o estampado (para el dibujo)</span>
       <div class="photo-row">
-        <img id="edImg" alt="" hidden>
+        <img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" id="edImg" alt="" hidden>
         <label class="btn btn-sm btn-outline" for="edFile">Subir diseño</label>
         <input id="edFile" type="file" accept="image/*" hidden>
         <button class="btn btn-sm btn-ghost" type="button" id="edImgDel" hidden>Quitar</button>
       </div>
       <span class="label">Foto del producto</span>
       <div class="photo-row">
-        <img id="edModel" alt="" hidden>
+        <img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" id="edModel" alt="" hidden>
         <label class="btn btn-sm btn-outline" for="edModelFile">Subir foto del producto</label>
         <input id="edModelFile" type="file" accept="image/*" hidden>
         <button class="btn btn-sm btn-ghost" type="button" id="edModelDel" hidden>Quitar</button>
@@ -351,7 +350,7 @@
     </div>
     <span class="label">Logo</span>
     <div class="photo-row">
-      <img id="pgLogo" alt="Logo actual" hidden>
+      <img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" id="pgLogo" alt="Logo actual" hidden>
       <label class="btn btn-sm btn-outline" for="pgFile">Subir logo</label>
       <input id="pgFile" type="file" accept="image/*" hidden>
       <button class="btn btn-sm btn-ghost" type="button" id="pgLogoDel" hidden>Quitar logo</button>
@@ -359,7 +358,7 @@
     <p class="form-help">Sin logo se muestra el nombre del negocio.</p>
     <span class="label">Icono de la pestaña del navegador</span>
     <div class="photo-row">
-      <img id="pgFav" alt="Icono actual" hidden>
+      <img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" id="pgFav" alt="Icono actual" hidden>
       <label class="btn btn-sm btn-outline" for="pgFavFile">Subir icono</label>
       <input id="pgFavFile" type="file" accept="image/*" hidden>
       <button class="btn btn-sm btn-ghost" type="button" id="pgFavDel" hidden>Quitar icono</button>
@@ -427,7 +426,7 @@
     <label class="check"><input id="hrRoll" type="checkbox"> Animar las letras del título (giro)</label>
     <span class="label">Elementos del fondo</span>
     <label class="check"><input id="hrRed" type="checkbox"> Franja de color detrás del título</label>
-    <div class="swatches" id="hrRedSw"><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Color #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Color #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Color #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Color #14d600"></button><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Color #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Color #1f1f1f"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Color #9b9b9b"></button><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Color #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Color #ffffff"></button><input type="color" id="hrRedColor" aria-label="Otro color de franja"></div>
+    <div class="swatches" id="hrRedSw"><button type="button" class="sw" data-c="#ff2525" aria-label="Color #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Color #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Color #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Color #14d600"></button><button type="button" class="sw" data-c="#0b0b0b" aria-label="Color #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Color #1f1f1f"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Color #9b9b9b"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Color #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Color #ffffff"></button><input type="color" id="hrRedColor" aria-label="Otro color de franja"></div>
     <label class="check"><input id="hrCross" type="checkbox"> Marcas «+»</label>
     <label class="check"><input id="hrMark" type="checkbox"> Sello de la esquina</label>
     <label class="check"><input id="hrRing" type="checkbox"> Círculo punteado con texto</label>
@@ -450,31 +449,31 @@
     <p class="form-help">Elige un color o una imagen para el fondo de cada sección. Con color, las letras cambian a claras u oscuras solas; con imagen, tú eliges cómo se ven las letras.</p>
       <div class="bgrow" data-sec="page">
         <span class="bgrow-l">Página</span>
-        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Página: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Página: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" style="background:#3a3a3a" aria-label="Página: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Página: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Página: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Página: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Página: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Página: #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Página: #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Página: #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Página: #14d600"></button><input type="color" aria-label="Página: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
+        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Página: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Página: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" aria-label="Página: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Página: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" aria-label="Página: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Página: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Página: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Página: #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Página: #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Página: #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Página: #14d600"></button><input type="color" aria-label="Página: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
       </div>
       <div class="bgrow" data-sec="header">
         <span class="bgrow-l">Menú de arriba</span>
-        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Menú de arriba: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Menú de arriba: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" style="background:#3a3a3a" aria-label="Menú de arriba: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Menú de arriba: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Menú de arriba: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Menú de arriba: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Menú de arriba: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Menú de arriba: #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Menú de arriba: #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Menú de arriba: #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Menú de arriba: #14d600"></button><input type="color" aria-label="Menú de arriba: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
+        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Menú de arriba: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Menú de arriba: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" aria-label="Menú de arriba: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Menú de arriba: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" aria-label="Menú de arriba: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Menú de arriba: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Menú de arriba: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Menú de arriba: #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Menú de arriba: #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Menú de arriba: #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Menú de arriba: #14d600"></button><input type="color" aria-label="Menú de arriba: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
       </div>
       <div class="bgrow" data-sec="hero">
         <span class="bgrow-l">Portada</span>
-        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Portada: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Portada: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" style="background:#3a3a3a" aria-label="Portada: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Portada: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Portada: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Portada: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Portada: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Portada: #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Portada: #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Portada: #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Portada: #14d600"></button><input type="color" aria-label="Portada: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
+        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Portada: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Portada: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" aria-label="Portada: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Portada: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" aria-label="Portada: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Portada: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Portada: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Portada: #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Portada: #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Portada: #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Portada: #14d600"></button><input type="color" aria-label="Portada: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
       </div>
       <div class="bgrow" data-sec="facts">
         <span class="bgrow-l">Datos</span>
-        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Datos: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Datos: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" style="background:#3a3a3a" aria-label="Datos: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Datos: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Datos: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Datos: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Datos: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Datos: #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Datos: #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Datos: #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Datos: #14d600"></button><input type="color" aria-label="Datos: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
+        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Datos: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Datos: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" aria-label="Datos: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Datos: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" aria-label="Datos: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Datos: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Datos: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Datos: #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Datos: #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Datos: #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Datos: #14d600"></button><input type="color" aria-label="Datos: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
       </div>
       <div class="bgrow" data-sec="catalog">
         <span class="bgrow-l">Catálogo</span>
-        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Catálogo: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Catálogo: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" style="background:#3a3a3a" aria-label="Catálogo: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Catálogo: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Catálogo: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Catálogo: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Catálogo: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Catálogo: #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Catálogo: #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Catálogo: #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Catálogo: #14d600"></button><input type="color" aria-label="Catálogo: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
+        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Catálogo: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Catálogo: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" aria-label="Catálogo: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Catálogo: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" aria-label="Catálogo: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Catálogo: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Catálogo: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Catálogo: #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Catálogo: #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Catálogo: #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Catálogo: #14d600"></button><input type="color" aria-label="Catálogo: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
       </div>
       <div class="bgrow" data-sec="howto">
         <span class="bgrow-l">Cómo pedir</span>
-        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Cómo pedir: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Cómo pedir: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" style="background:#3a3a3a" aria-label="Cómo pedir: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Cómo pedir: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Cómo pedir: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Cómo pedir: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Cómo pedir: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Cómo pedir: #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Cómo pedir: #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Cómo pedir: #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Cómo pedir: #14d600"></button><input type="color" aria-label="Cómo pedir: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
+        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Cómo pedir: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Cómo pedir: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" aria-label="Cómo pedir: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Cómo pedir: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" aria-label="Cómo pedir: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Cómo pedir: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Cómo pedir: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Cómo pedir: #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Cómo pedir: #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Cómo pedir: #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Cómo pedir: #14d600"></button><input type="color" aria-label="Cómo pedir: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
       </div>
       <div class="bgrow" data-sec="footer">
         <span class="bgrow-l">Contacto y pie</span>
-        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Contacto y pie: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Contacto y pie: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" style="background:#3a3a3a" aria-label="Contacto y pie: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Contacto y pie: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Contacto y pie: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Contacto y pie: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Contacto y pie: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Contacto y pie: #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Contacto y pie: #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Contacto y pie: #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Contacto y pie: #14d600"></button><input type="color" aria-label="Contacto y pie: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
+        <div class="swatches"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Contacto y pie: #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Contacto y pie: #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" aria-label="Contacto y pie: #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Contacto y pie: #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" aria-label="Contacto y pie: #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Contacto y pie: #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Contacto y pie: #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Contacto y pie: #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Contacto y pie: #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Contacto y pie: #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Contacto y pie: #14d600"></button><input type="color" aria-label="Contacto y pie: otro color"><button type="button" class="btn btn-sm btn-ghost bg-reset">Original</button></div>
       </div>
 
     <div class="ed-actions">
@@ -501,17 +500,17 @@
       <input id="slText" type="text" maxlength="60" placeholder="Usa el nombre del producto">
       <span class="label">Imagen de la tarjeta</span>
       <div class="photo-row">
-        <img id="slImg" alt="" hidden>
+        <img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" id="slImg" alt="" hidden>
         <label class="btn btn-sm btn-outline" for="slFile">Subir imagen completa</label>
         <input id="slFile" type="file" accept="image/*" hidden>
         <button class="btn btn-sm btn-ghost" type="button" id="slImgDel" hidden>Quitar imagen</button>
       </div>
       <p class="form-help">Cubre toda la tarjeta (vertical, 210 × 286, proporción 3:4). Sin imagen se usa la foto o el dibujo del producto.</p>
       <span class="label" id="slBgLbl">Fondo de la tarjeta</span>
-      <div class="swatches" id="slBg" role="group" aria-labelledby="slBgLbl"><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Fondo #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Fondo #ffffff"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Fondo #e9e9e9"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Fondo #9b9b9b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Fondo #1f1f1f"></button><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Fondo #0b0b0b"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Fondo #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Fondo #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Fondo #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Fondo #14d600"></button><input type="color" id="slBgColor" aria-label="Otro color"><button type="button" class="btn btn-sm btn-ghost" id="slBgAuto">Automático</button></div>
+      <div class="swatches" id="slBg" role="group" aria-labelledby="slBgLbl"><button type="button" class="sw" data-c="#f4f4f4" aria-label="Fondo #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Fondo #ffffff"></button><button type="button" class="sw" data-c="#e9e9e9" aria-label="Fondo #e9e9e9"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Fondo #9b9b9b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Fondo #1f1f1f"></button><button type="button" class="sw" data-c="#0b0b0b" aria-label="Fondo #0b0b0b"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Fondo #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Fondo #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Fondo #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Fondo #14d600"></button><input type="color" id="slBgColor" aria-label="Otro color"><button type="button" class="btn btn-sm btn-ghost" id="slBgAuto">Automático</button></div>
       <div class="ed-actions sl-move">
         <button class="btn btn-sm btn-outline" type="button" id="slLeft">← Mover a la izquierda</button>
-        <button class="btn btn-sm btn-outline" type="button" id="slRight">Mover a la derecha →</button>
+        <button class="btn btn-sm btn-outline" type="button" id="slRight">Mover a la derecha</button>
       </div>
       <p class="form-err" id="slErr" hidden></p>
       <div class="ed-actions">
@@ -529,7 +528,7 @@
 <!-- Image viewer (cards without product) -->
 <dialog id="dlgImg" class="dlg dlg-img" aria-label="Imagen">
   <button class="iconbtn dlg-x" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
-  <img id="imgView" alt="">
+  <img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" id="imgView" alt="">
   <p id="imgCap" class="img-cap"></p>
 </dialog>
 
@@ -548,13 +547,13 @@
       <label for="fxSmall">Texto pequeño</label>
       <textarea id="fxSmall" rows="2" maxlength="120"></textarea>
       <span class="label" id="fxBgLbl">Color del recuadro</span>
-      <div class="swatches" id="fxBg" role="group" aria-labelledby="fxBgLbl"><button type="button" class="sw" data-c="#0b0b0b" style="background:#0b0b0b" aria-label="Fondo #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" style="background:#1f1f1f" aria-label="Fondo #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" style="background:#3a3a3a" aria-label="Fondo #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" style="background:#9b9b9b" aria-label="Fondo #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" style="background:#e9e9e9" aria-label="Fondo #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" style="background:#f4f4f4" aria-label="Fondo #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" style="background:#ffffff" aria-label="Fondo #ffffff"></button><button type="button" class="sw" data-c="#ff2525" style="background:#ff2525" aria-label="Fondo #ff2525"></button><button type="button" class="sw" data-c="#006dff" style="background:#006dff" aria-label="Fondo #006dff"></button><button type="button" class="sw" data-c="#a74dff" style="background:#a74dff" aria-label="Fondo #a74dff"></button><button type="button" class="sw" data-c="#14d600" style="background:#14d600" aria-label="Fondo #14d600"></button><input type="color" id="fxBgColor" aria-label="Otro color"></div>
+      <div class="swatches" id="fxBg" role="group" aria-labelledby="fxBgLbl"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Fondo #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Fondo #1f1f1f"></button><button type="button" class="sw" data-c="#3a3a3a" aria-label="Fondo #3a3a3a"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Fondo #9b9b9b"></button><button type="button" class="sw" data-c="#e9e9e9" aria-label="Fondo #e9e9e9"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Fondo #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Fondo #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Fondo #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Fondo #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Fondo #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Fondo #14d600"></button><input type="color" id="fxBgColor" aria-label="Otro color"></div>
       <label for="fxInk">Color de las letras</label>
       <select id="fxInk"><option value="auto">Automático (según el fondo)</option><option value="light">Claras</option><option value="dark">Oscuras</option></select>
       <span class="label">Icono</span>
       <div class="fx-icons" id="fxIcons" role="group" aria-label="Iconos"></div>
       <div class="photo-row">
-        <img id="fxIconImg" alt="" hidden>
+        <img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" id="fxIconImg" alt="" hidden>
         <label class="btn btn-sm btn-outline" for="fxIconFile">Subir mi propio icono</label>
         <input id="fxIconFile" type="file" accept="image/*" hidden>
         <button class="btn btn-sm btn-ghost" type="button" id="fxIconImgDel" hidden>Quitar</button>
@@ -566,7 +565,7 @@
       <div class="ed-actions sl-move">
         <button class="btn btn-sm btn-outline" type="button" id="fxLeft">← Mover antes</button>
         <button class="btn btn-sm btn-ghost" type="button" id="fxResetPos">Acomodar como al inicio</button>
-        <button class="btn btn-sm btn-outline" type="button" id="fxRight">Mover después →</button>
+        <button class="btn btn-sm btn-outline" type="button" id="fxRight">Mover después</button>
       </div>
       <div class="ed-actions">
         <button class="btn btn-dark" type="submit">Guardar recuadro</button>
@@ -583,6 +582,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="supabase.js?v=2.45.4"></script>
-<script src="app.js?v=202611181623"></script>
+<script src="app.js?v=202611200452"></script>
 </body>
 </html>
