@@ -9,6 +9,8 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+// colours from the database only ever reach markup as a plain hex or rgb() value
+const safeColor = (c, d = '#0b0b0b') => { const v = String(c ?? '').trim(); return /^#[0-9a-f]{3,8}$/i.test(v) || /^rgba?\([\d\s.,%]+\)$/i.test(v) ? v : d; };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => '$' + Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 });
 const RM = matchMedia('(prefers-reduced-motion: reduce)');
@@ -78,7 +80,7 @@ SHAPES.polo = SHAPES.tee; SHAPES.hoodie = SHAPES.crewneck; SHAPES.shirt = SHAPES
 /* opt.bare → returns only the garment body (no hanger, no <svg>) for dressing the model */
 function garmentSVG(p, opt = {}) {
   const g = p.garment || 'tee';
-  const color = opt.color || p.color || '#0b0b0b';
+  const color = safeColor(opt.color || p.color, '#0b0b0b');
   const dark = lum(color) < 110;
   const edge = dark ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.22)';
   const seam = dark ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.28)';
@@ -233,8 +235,8 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitF
 function factHTML(t, i) {
   const ink = t.ink === 'light' ? '#f4f4f4' : t.ink === 'dark' ? '#0b0b0b' : inkFor(t.bg);
   const pos = (k) => { const p = (t.pos && t.pos[k]) || FACT_POS[k]; return `left:${p[0]}%;top:${p[1]}%`; };
-  const icon = t.iconImg ? `<img src="${esc(t.iconImg)}" alt="" draggable="false">` : (t.icon ? iconSVG(t.icon, t.iconColor) : '');
-  return `<div class="fact fx" data-fi="${i}" style="background:${esc(t.bg || '#ffffff')};color:${ink}">
+  const icon = t.iconImg ? `<img src="${esc(t.iconImg)}" alt="" draggable="false">` : (t.icon ? iconSVG(t.icon, t.iconColor ? safeColor(t.iconColor, '') : '') : '');
+  return `<div class="fact fx" data-fi="${i}" style="background:${safeColor(t.bg, '#ffffff')};color:${ink}">
     <b class="fx-el" data-el="big" style="${pos('big')}">${esc(t.big || '')}</b>
     <span class="fx-el fx-small" data-el="small" style="${pos('small')}">${esc(t.small || '')}</span>
     ${icon ? `<span class="fx-el fx-icon" data-el="icon" style="${pos('icon')};width:${t.iconSize || 44}px;height:${t.iconSize || 44}px">${icon}</span>` : ''}
@@ -372,7 +374,7 @@ function renderOptions(prefix, p, state) {
   $(`#${prefix}Sizes`).innerHTML = sizes.map(s => `<button type="button" class="size" role="radio" aria-checked="${s === state.size}" data-size="${esc(s)}">${esc(s)}</button>`).join('');
   $(`#${prefix}SizesBox`).hidden = sizes.length < 2 && sizes[0] === 'Carta';
   $(`#${prefix}ColorsBox`).hidden = !cols.length;
-  $(`#${prefix}Colors`).innerHTML = cols.map((c, i) => `<button type="button" class="cswatch" role="radio" aria-checked="${i === state.color}" aria-label="${esc(c.n)}" title="${esc(c.n)}" data-color="${i}" style="background:${c.h}"></button>`).join('');
+  $(`#${prefix}Colors`).innerHTML = cols.map((c, i) => `<button type="button" class="cswatch" role="radio" aria-checked="${i === state.color}" aria-label="${esc(c.n)}" title="${esc(c.n)}" data-color="${i}" style="background:${safeColor(c.h)}"></button>`).join('');
   $(`#${prefix}ColorName`).textContent = cols[state.color] ? cols[state.color].n : '';
 }
 
@@ -954,7 +956,7 @@ function slideHTML(s, i, solo) {
   const ink = s.bg ? (lum(s.bg) < 140 ? 'light' : 'dark') : '';
   const text = s.text || (p ? p.name : 'Tarjeta sin producto');
   const price = p ? priceLabel(p) : '';
-  const inner = `<span class="wcard-in"${s.bg ? ` style="background:${esc(s.bg)}"` : ''}>${vis}</span>`;
+  const inner = `<span class="wcard-in"${s.bg ? ` style="background:${safeColor(s.bg, '#f4f4f4')}"` : ''}>${vis}</span>`;
   return solo ? `<span class="wcard solo" data-tone="${tone}" data-ink="${ink}">${inner}</span>`
     : `<button class="wcard" type="button" role="option" data-i="${i}" data-tone="${tone}" data-ink="${ink}" aria-label="${esc(text)}${price ? ', ' + price : ''}">${inner}</button>`;
 }
