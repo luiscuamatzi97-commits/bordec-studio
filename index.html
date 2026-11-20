@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap">
-<link rel="stylesheet" href="styles.css?v=202611200452">
+<link rel="stylesheet" href="styles.css?v=202611200537">
 <link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230b0b0b'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23f4f4f4' stroke-width='2.4' stroke-dasharray='3 2.4'/%3E%3C/svg%3E">
 </head>
 <body>
@@ -130,7 +130,10 @@
         <span class="wp-arrow" aria-hidden="true">▲</span>
         <p class="wp-name" id="wName" aria-live="polite">Cargando diseños…</p>
         <p class="wp-price" id="wPrice"></p>
-        <button class="btn btn-dark" id="wOpen" type="button">Elegir talla y color</button>
+        <div class="wp-actions">
+          <button class="btn btn-dark" id="wOpen" type="button">Elegir talla y color</button>
+          <button class="btn btn-line" id="wAll" type="button">Ver todos los modelos</button>
+        </div>
       </div>
     </div>
   </section>
@@ -431,6 +434,18 @@
     <label class="check"><input id="hrMark" type="checkbox"> Sello de la esquina</label>
     <label class="check"><input id="hrRing" type="checkbox"> Círculo punteado con texto</label>
     <label class="check"><input id="hrArrows" type="checkbox"> Triángulos ◀ ▶</label>
+    <span class="label">Botones de la portada</span>
+    <div class="two">
+      <div><label for="hbAText">Texto del botón principal</label><input id="hbAText" type="text" maxlength="32"></div>
+      <div><label for="hbBText">Texto del botón de contorno</label><input id="hbBText" type="text" maxlength="32"></div>
+    </div>
+    <span class="label">Color del botón principal</span>
+    <div class="swatches" id="hbASw"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Color #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Color #1f1f1f"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Color #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Color #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Color #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Color #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Color #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Color #14d600"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Color #9b9b9b"></button><input type="color" id="hbAColor" aria-label="Otro color del botón principal"></div>
+    <button class="btn btn-sm btn-ghost hb-auto" type="button" id="hbAAuto">Color automático</button>
+    <label class="check"><input id="hbBShow" type="checkbox"> Mostrar el botón de contorno</label>
+    <span class="label">Color del contorno y su texto</span>
+    <div class="swatches" id="hbBSw"><button type="button" class="sw" data-c="#0b0b0b" aria-label="Color #0b0b0b"></button><button type="button" class="sw" data-c="#1f1f1f" aria-label="Color #1f1f1f"></button><button type="button" class="sw" data-c="#f4f4f4" aria-label="Color #f4f4f4"></button><button type="button" class="sw" data-c="#ffffff" aria-label="Color #ffffff"></button><button type="button" class="sw" data-c="#ff2525" aria-label="Color #ff2525"></button><button type="button" class="sw" data-c="#006dff" aria-label="Color #006dff"></button><button type="button" class="sw" data-c="#a74dff" aria-label="Color #a74dff"></button><button type="button" class="sw" data-c="#14d600" aria-label="Color #14d600"></button><button type="button" class="sw" data-c="#9b9b9b" aria-label="Color #9b9b9b"></button><input type="color" id="hbBColor" aria-label="Otro color del contorno"></div>
+    <button class="btn btn-sm btn-ghost hb-auto" type="button" id="hbBAuto">Color automático</button>
     <p class="form-help">Los cambios se ven al instante. Toca «Guardar portada» para publicarlos.</p>
     <div class="ed-actions">
       <button class="btn btn-dark" type="submit">Guardar portada</button>
@@ -582,6 +597,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="supabase.js?v=2.45.4"></script>
-<script src="app.js?v=202611200452"></script>
+<script src="app.js?v=202611200537"></script>
 </body>
 </html>

@@ -148,6 +148,7 @@ function setFavicon(url) {
   else if (t) t.remove();
 }
 function applySettings() {
+  if ($('#wAll')) applyHeroBtns();
   $$('[data-k]').forEach(el => { if (document.activeElement !== el) el.textContent = S[el.dataset.k] ?? DEF[el.dataset.k] ?? ''; });
   document.title = S.name || DEF.name;
   applyHero(); applyBgs();
@@ -791,6 +792,7 @@ function openHero() {
   $('#hrRoll').checked = c.roll; $('#hrRed').checked = c.red; $('#hrCross').checked = c.cross; $('#hrMark').checked = c.mark; $('#hrRing').checked = c.ring; $('#hrArrows').checked = c.arrows;
   $('#hrRedColor').value = /^#[0-9a-f]{6}$/i.test(c.redColor) ? c.redColor : '#ff2525';
   markSw('#hrRedSw', c.redColor);
+  hbDraft = hbCfg(); hbFill(hbDraft);
   $('#dlgHero').showModal();
 }
 function markSw(box, col) { $$(`${box} .sw`).forEach(s => s.setAttribute('aria-pressed', String((s.dataset.c || '').toLowerCase() === String(col || '').toLowerCase()))); }
@@ -808,7 +810,8 @@ $('#hrForm').addEventListener('input', e => { if (e.target.id === 'hrRedColor') 
 $('#hrForm').addEventListener('change', readHero);
 $('#hrRedSw').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; hrDraft.redColor = b.dataset.c; markSw('#hrRedSw', b.dataset.c); readHero(); });
 $('#hrReset').addEventListener('click', () => { hrDraft = { ...HERO_DEF }; $('#hrWord').value = COL.word.toUpperCase(); $('#hrKicker').value = COL.kicker; $('#hrLabel').value = COL.label; $('#hrLeft').value = DEF.eyebrow;
-  $('#hrShowHead').checked = true; $('#hrFont').value = HERO_DEF.font; $('#hrSize').value = 100; $('#hrRoll').checked = $('#hrRed').checked = $('#hrCross').checked = $('#hrMark').checked = $('#hrRing').checked = $('#hrArrows').checked = true; markSw('#hrRedSw', HERO_DEF.redColor); readHero(); });
+  $('#hrShowHead').checked = true; $('#hrFont').value = HERO_DEF.font; $('#hrSize').value = 100; $('#hrRoll').checked = $('#hrRed').checked = $('#hrCross').checked = $('#hrMark').checked = $('#hrRing').checked = $('#hrArrows').checked = true; markSw('#hrRedSw', HERO_DEF.redColor); readHero();
+  hbDraft = { a: { ...HB_DEF.a }, b: { ...HB_DEF.b } }; hbFill(hbDraft); applyHeroBtns(hbDraft); });
 $('#hrForm').addEventListener('submit', async e => {
   e.preventDefault(); readHero();
   const ok = await saveSettings({
@@ -816,13 +819,59 @@ $('#hrForm').addEventListener('submit', async e => {
     col_words: { ...(S.col_words || {}), [COL.slug]: ($('#hrWord').value.trim() || COL.word).slice(0, 24) },
     col_kickers: { ...(S.col_kickers || {}), [COL.slug]: $('#hrKicker').value.trim() || COL.kicker },
     col_labels: { ...(S.col_labels || {}), [COL.slug]: $('#hrLabel').value.trim() || COL.label },
-    eyebrow: $('#hrLeft').value.trim() || DEF.eyebrow
+    eyebrow: $('#hrLeft').value.trim() || DEF.eyebrow,
+    hero_btns: hbDraft || hbCfg()
   });
   if (ok) { $('#dlgHero').close(); renderRoll(); }
 });
 $('#dlgHero').addEventListener('close', () => { applySettings(); renderRoll(); });
 $('#aHero').addEventListener('click', openHero);
 $('#temporada').addEventListener('click', e => { if (editing && !preview && e.target.closest('.hero-top, .hero-titlebox, .hero-meta') && !e.target.closest('.tri')) { e.preventDefault(); openHero(); } }, true);
+
+/* ---------------- Hero buttons (text and colour, editable) ---------------- */
+const HB_DEF = { a: { text: 'Elegir talla y color', bg: '' }, b: { text: 'Ver todos los modelos', color: '', show: true } };
+let hbDraft = null;
+function hbCfg() { const s = S.hero_btns || {}; return { a: { ...HB_DEF.a, ...(s.a || {}) }, b: { ...HB_DEF.b, ...(s.b || {}) } }; }
+function heroIsDark() { const im = S.bgimg && S.bgimg.hero; if (im && im.url) return im.ink !== 'dark'; return lum((S.bg && S.bg.hero) || '#e9e9e9') < 140; }
+function applyHeroBtns(cfg) {
+  const c = cfg || hbCfg(), A = $('#wOpen'), B = $('#wAll');
+  A.textContent = c.a.text || HB_DEF.a.text;
+  A.classList.toggle('btn-pick', !!c.a.bg); A.classList.toggle('btn-dark', !c.a.bg);
+  if (c.a.bg) { A.style.setProperty('--pick-bg', c.a.bg); A.style.setProperty('--pick-ink', lum(c.a.bg) < 150 ? '#f4f4f4' : '#0b0b0b'); }
+  else { A.style.removeProperty('--pick-bg'); A.style.removeProperty('--pick-ink'); }
+  B.textContent = c.b.text || HB_DEF.b.text;
+  B.hidden = c.b.show === false;
+  B.style.setProperty('--line-c', c.b.color || (heroIsDark() ? '#14d600' : '#006dff'));
+}
+function goAllModels() {
+  let c = 'Todas';
+  const mine = P.filter(p => p.visible && p.collection === COL.slug);
+  if (COL.cat && P.some(p => p.visible && p.category === COL.cat)) c = COL.cat;
+  else if (mine.length) { const n = {}; mine.forEach(p => n[p.category] = (n[p.category] || 0) + 1); c = Object.keys(n).sort((x, y) => n[y] - n[x])[0]; }
+  cat = c; renderCatalog();
+  const el = document.getElementById('catalogo'); if (el) el.scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth', block: 'start' });
+}
+$('#wAll').addEventListener('click', goAllModels);
+function hbFill(c) {
+  $('#hbAText').value = c.a.text; $('#hbBText').value = c.b.text; $('#hbBShow').checked = c.b.show !== false;
+  markSw('#hbASw', c.a.bg); markSw('#hbBSw', c.b.color);
+  $('#hbAColor').value = /^#[0-9a-f]{6}$/i.test(c.a.bg) ? c.a.bg : '#0b0b0b';
+  $('#hbBColor').value = /^#[0-9a-f]{6}$/i.test(c.b.color) ? c.b.color : '#14d600';
+}
+function hbRead() {
+  hbDraft.a.text = $('#hbAText').value.trim() || HB_DEF.a.text;
+  hbDraft.b.text = $('#hbBText').value.trim() || HB_DEF.b.text;
+  hbDraft.b.show = $('#hbBShow').checked;
+  applyHeroBtns(hbDraft);
+}
+$('#hbASw').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; hbDraft.a.bg = b.dataset.c; markSw('#hbASw', b.dataset.c); hbRead(); });
+$('#hbBSw').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; hbDraft.b.color = b.dataset.c; markSw('#hbBSw', b.dataset.c); hbRead(); });
+$('#hbAColor').addEventListener('input', e => { hbDraft.a.bg = e.target.value; markSw('#hbASw', ''); hbRead(); });
+$('#hbBColor').addEventListener('input', e => { hbDraft.b.color = e.target.value; markSw('#hbBSw', ''); hbRead(); });
+$('#hbAAuto').addEventListener('click', () => { hbDraft.a.bg = ''; markSw('#hbASw', ''); hbRead(); });
+$('#hbBAuto').addEventListener('click', () => { hbDraft.b.color = ''; markSw('#hbBSw', ''); hbRead(); });
+['#hbAText', '#hbBText', '#hbBShow'].forEach(s => $(s).addEventListener('input', () => hbDraft && hbRead()));
+$('#hbBShow').addEventListener('change', () => hbDraft && hbRead());
 
 /* ---------------- Admin: backgrounds editor ---------------- */
 let bgDraft = {}, imgDraft = {};

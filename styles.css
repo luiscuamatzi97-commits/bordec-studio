@@ -160,7 +160,7 @@ body.editing .top { position: relative; top: 0; }
 .tri:active::before { transform: scale(.85); }
 .hero-meta { display: flex; justify-content: space-between; gap: 16px; padding-block: 12px 0; font: 500 var(--t-meta)/1.4 var(--f-mono); color: var(--graphite); }
 
-.wheel { --cw: 210px; --ch: 286px; --R: 600px; --top: 40px; position: relative; height: calc(var(--top) + var(--ch) + 190px); touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; outline-offset: -4px; }
+.wheel { --cw: 210px; --ch: 286px; --R: 600px; --top: 40px; position: relative; height: calc(var(--top) + var(--ch) + 256px); touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; outline-offset: -4px; }
 .wheel.dragging { cursor: grabbing; }
 .wheel-cards { position: absolute; inset: 0; }
 .wcard { position: absolute; left: 50%; top: var(--top); width: var(--cw); height: var(--ch); margin-left: calc(var(--cw) / -2); transform-origin: 50% calc(var(--ch) / 2 + var(--R)); transition: transform 760ms var(--ease-deck); will-change: transform; border: 0; padding: 0; background: none; cursor: pointer; }
@@ -188,9 +188,9 @@ body.editing .top { position: relative; top: 0; }
 .wp-arrow { font-size: .75rem; line-height: 1; }
 .wp-name { font-family: var(--f-display); text-transform: uppercase; font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem); line-height: 1; }
 .wp-price { font: 500 var(--t-2)/1.4 var(--f-mono); color: var(--gray-dark); }
-.wheel-pointer .btn { margin-top: 8px; }
+.wheel-pointer .wp-actions { display: grid; justify-items: center; gap: 16px; margin-top: 8px; }
 @media (max-width: 699.98px) {
-  .wheel { --cw: 136px; --ch: 186px; --R: 340px; --top: 34px; height: calc(var(--top) + var(--ch) + 200px); }
+  .wheel { --cw: 136px; --ch: 186px; --R: 340px; --top: 34px; height: calc(var(--top) + var(--ch) + 268px); }
   .wcard-in { border-radius: 16px; }
   .wcard-vis { inset: 0 0 30px; padding: 12px 16px 0; }
   .wcard-lab { font-size: .625rem; left: 8px; right: 8px; bottom: 9px; }
@@ -572,3 +572,10 @@ a { text-underline-offset: .22em; text-decoration-thickness: 1px; }
 /* Hallmark polish: figures, contrast and edges */
 .wp-price span + span::before, .card-ws span + span::before { content: ""; display: inline-block; width: 1px; height: .9em; margin: 0 8px; vertical-align: -.1em; background: currentColor; opacity: .4; }
 .adminbar .dot { display: none; }
+
+/* Hero buttons: the outline button, and owner-picked colours */
+.btn-line { --line-c: var(--blue); background: transparent; border: 2px solid var(--line-c); color: var(--line-c); }
+@media (hover: hover) and (pointer: fine) { .btn-line:hover { background: color-mix(in srgb, var(--line-c) 14%, transparent); } }
+.btn-pick { background: var(--pick-bg); color: var(--pick-ink); }
+@media (hover: hover) and (pointer: fine) { .btn-pick:hover { background: color-mix(in srgb, var(--pick-bg) 86%, var(--pick-ink)); } }
+.hb-auto { justify-self: start; margin-top: -4px; }
