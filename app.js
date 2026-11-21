@@ -214,7 +214,7 @@ const FICONS = {
 const iconSVG = (name, col) => FICONS[name] ? `<svg viewBox="0 0 24 24" fill="none" stroke="${col || 'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${FICONS[name]}</svg>` : '';
 const inkFor = bg => lum(bg || '#ffffff') < 140 ? '#f4f4f4' : '#0b0b0b';
 function fitFacts() {
-  for (const tile of $$('#facts .fact.fx, .fx-prev-box .fact.fx')) {
+  for (const tile of $$('#facts .fact.fx, .fx-prev-box .fact.fx, #fxPreview .fact.fx')) {
     const big = tile.querySelector('[data-el="big"]'); if (!big) continue;
     big.style.fontSize = '';
     const T = tile.getBoundingClientRect(), ic = tile.querySelector('[data-el="icon"]');
@@ -233,12 +233,12 @@ addEventListener('resize', () => { cancelAnimationFrame(fitRaf); fitRaf = reques
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitFacts());
 
 function factHTML(t, i) {
-  const ink = t.ink === 'light' ? '#f4f4f4' : t.ink === 'dark' ? '#0b0b0b' : inkFor(t.bg);
+  const ink = t.ink === 'light' ? '#f4f4f4' : t.ink === 'dark' ? '#0b0b0b' : /^#/.test(t.ink || '') ? safeColor(t.ink, inkFor(t.bg)) : inkFor(t.bg);
   const pos = (k) => { const p = (t.pos && t.pos[k]) || FACT_POS[k]; return `left:${p[0]}%;top:${p[1]}%`; };
   const icon = t.iconImg ? `<img src="${esc(t.iconImg)}" alt="" draggable="false">` : (t.icon ? iconSVG(t.icon, t.iconColor ? safeColor(t.iconColor, '') : '') : '');
   return `<div class="fact fx" data-fi="${i}" style="background:${safeColor(t.bg, '#ffffff')};color:${ink}">
     <b class="fx-el" data-el="big" style="${pos('big')}">${esc(t.big || '')}</b>
-    <span class="fx-el fx-small" data-el="small" style="${pos('small')}">${esc(t.small || '')}</span>
+    <span class="fx-el fx-small" data-el="small" style="${pos('small')}${t.inkSmall ? `;color:${safeColor(t.inkSmall, ink)};opacity:1` : ''}">${esc(t.small || '')}</span>
     ${icon ? `<span class="fx-el fx-icon" data-el="icon" style="${pos('icon')};width:${t.iconSize || 44}px;height:${t.iconSize || 44}px">${icon}</span>` : ''}
   </div>`;
 }
@@ -1056,18 +1056,23 @@ function openFact(i) {
   if (i < 0) { fxList.push({ id: 'f' + Date.now().toString(36), bg: '#f4f4f4', big: 'Nuevo', small: 'Escribe aquí un dato de tu taller', icon: 'star' }); i = fxList.length - 1; }
   fxIdx = i; ftDraft = { ...fxList[i] };
   $('#fxBig').value = ftDraft.big || ''; $('#fxSmall').value = ftDraft.small || '';
-  $('#fxInk').value = ftDraft.ink || 'auto'; $('#fxIconSize').value = ftDraft.iconSize || 44;
+  $('#fxIconSize').value = ftDraft.iconSize || 44;
   $('#fxIconColor').value = /^#[0-9a-f]{6}$/i.test(ftDraft.iconColor || '') ? ftDraft.iconColor : '#ff2525';
   $('#fxIcons').innerHTML = '<button type="button" class="fx-ic" data-ic="" aria-label="Sin icono">∅</button>' + Object.keys(FICONS).map(k => `<button type="button" class="fx-ic" data-ic="${k}" aria-label="Icono ${k}">${iconSVG(k)}</button>`).join('');
   $('#fxPos').textContent = `Recuadro ${i + 1} de ${fxList.length}. Para moverlos, arrastra el número, el texto o el icono directo en la página.`;
   $('#fxConfirm').hidden = true; fxRefresh(); $('#dlgFact').showModal();
 }
 function fxRefresh() {
+  const inkHex = ftDraft.ink === 'light' ? '#f4f4f4' : ftDraft.ink === 'dark' ? '#0b0b0b' : (ftDraft.ink || '');
+  markSw('#fxInkSw', inkHex); markSw('#fxInk2Sw', ftDraft.inkSmall || '');
+  $('#fxInkColor').value = /^#[0-9a-f]{6}$/i.test(inkHex) ? inkHex : '#0b0b0b';
+  $('#fxInk2Color').value = /^#[0-9a-f]{6}$/i.test(ftDraft.inkSmall || '') ? ftDraft.inkSmall : '#0b0b0b';
+  $('#fxInkAuto').setAttribute('aria-pressed', String(!ftDraft.ink)); $('#fxInk2Auto').setAttribute('aria-pressed', String(!ftDraft.inkSmall));
   markSw('#fxBg', ftDraft.bg || ''); $('#fxBgColor').value = /^#[0-9a-f]{6}$/i.test(ftDraft.bg || '') ? ftDraft.bg : '#ffffff';
   $$('#fxIcons .fx-ic').forEach(b => b.setAttribute('aria-pressed', String(!ftDraft.iconImg && (b.dataset.ic || '') === (ftDraft.icon || ''))));
   const im = $('#fxIconImg'); im.hidden = !ftDraft.iconImg; if (ftDraft.iconImg) im.src = ftDraft.iconImg; $('#fxIconImgDel').hidden = !ftDraft.iconImg;
   $('#fxSizeVal').textContent = (ftDraft.iconSize || 44) + ' px';
-  $('#fxPreview').innerHTML = factHTML(ftDraft, 0);
+  $('#fxPreview').innerHTML = factHTML(ftDraft, 0); requestAnimationFrame(fitFacts);
   $('#fxLeft').disabled = fxIdx <= 0; $('#fxRight').disabled = fxIdx >= fxList.length - 1;
 }
 $('#fxForm').addEventListener('input', e => {
@@ -1076,10 +1081,14 @@ $('#fxForm').addEventListener('input', e => {
   if (e.target.id === 'fxSmall') ftDraft.small = e.target.value;
   if (e.target.id === 'fxIconSize') ftDraft.iconSize = +e.target.value;
   if (e.target.id === 'fxIconColor') ftDraft.iconColor = e.target.value;
-  if (e.target.id === 'fxInk') ftDraft.ink = e.target.value === 'auto' ? null : e.target.value;
+  if (e.target.id === 'fxInkColor') ftDraft.ink = e.target.value;
+  if (e.target.id === 'fxInk2Color') ftDraft.inkSmall = e.target.value;
   fxRefresh();
 });
-$('#fxForm').addEventListener('change', e => { if (e.target.id === 'fxInk') { ftDraft.ink = e.target.value === 'auto' ? null : e.target.value; fxRefresh(); } });
+$('#fxInkSw').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { ftDraft.ink = b.dataset.c; fxRefresh(); } });
+$('#fxInk2Sw').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { ftDraft.inkSmall = b.dataset.c; fxRefresh(); } });
+$('#fxInkAuto').addEventListener('click', () => { ftDraft.ink = null; fxRefresh(); });
+$('#fxInk2Auto').addEventListener('click', () => { ftDraft.inkSmall = null; fxRefresh(); });
 $('#fxBg').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { ftDraft.bg = b.dataset.c; fxRefresh(); } });
 $('#fxIcons').addEventListener('click', e => { const b = e.target.closest('.fx-ic'); if (!b) return; ftDraft.icon = b.dataset.ic || null; ftDraft.iconImg = null; fxRefresh(); });
 $('#fxIconAuto').addEventListener('click', () => { ftDraft.iconColor = null; fxRefresh(); });
