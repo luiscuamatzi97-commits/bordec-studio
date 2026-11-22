@@ -618,6 +618,12 @@ $$('dialog').forEach(d => d.addEventListener('click', e => { if (e.target.closes
 
 /* ---------------- Data ---------------- */
 const norm = x => ({ ...x, price: Number(x.price), wholesale_price: x.wholesale_price == null ? null : Number(x.wholesale_price) });
+// last good copy of the page data, so a returning visitor sees the real page at once instead of the bare defaults
+const CACHE_KEY = 'bordec_cache_v1';
+let cacheSig = '';
+function readCache() { try { const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); return c && c.s && Array.isArray(c.p) ? c : null; } catch (e) { return null; } }
+function writeCache(s, p) { try { const v = JSON.stringify({ s, p }); localStorage.setItem(CACHE_KEY, v); return v; } catch (e) { return ''; } }
+function reveal() { document.body.classList.remove('is-loading'); }
 async function load() {
   const [s, p] = await Promise.all([
     sb.from('web_settings').select('data').eq('id', 1).maybeSingle(),
@@ -626,7 +632,11 @@ async function load() {
   if (s.data && s.data.data) S = { ...DEF, ...s.data.data };
   if (p.error) { $('#grid').innerHTML = '<p class="empty">No pudimos cargar el catálogo. Revisa tu conexión y recarga la página.</p>'; $('#stName').textContent = 'No pudimos cargar la temporada'; }
   P = (p.data || []).map(norm);
-  renderAll();
+  const sig = !p.error && s.data && s.data.data ? writeCache(s.data.data, p.data || []) : '';
+  // nothing changed since the cached copy already on screen: keep it still, no redraw
+  if (!(sig && sig === cacheSig && !isAdmin)) renderAll();
+  cacheSig = sig;
+  reveal();
 }
 function renderAll() { applyColMode(); applySettings(); applyCards(); renderRoll(); renderFacts(); renderWheel(curId); renderCatalog(); renderBag(); }
 
@@ -1358,7 +1368,12 @@ $('#aImport').addEventListener('click', async () => {
 /* ---------------- Boot ---------------- */
 RM.addEventListener?.('change', () => layoutW(true));
 COL = colFromHash() || COLS[0]; cat = COL.title;
-renderAll();
-load().then(() => { setCollection(COL, false); return checkSession(); });
+const cached = readCache();
+if (cached) {
+  S = { ...DEF, ...cached.s }; P = cached.p.map(norm); cacheSig = JSON.stringify({ s: cached.s, p: cached.p });
+  renderAll(); setCollection(COL, false); reveal();
+} else renderAll();
+setTimeout(reveal, 8000); // never leave the loader up if the network is down
+load().then(() => { if (!cached) setCollection(COL, false); return checkSession(); }).catch(reveal);
 sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT' && isAdmin) setAdmin(false); });
 })();
