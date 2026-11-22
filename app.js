@@ -832,8 +832,10 @@ function restoreTokens(el) {
     if (ROOT_TOK[v]) el.style.setProperty(v, ROOT_TOK[v]);
   }
 }
+// background images belong to each collection; colours stay shared
+function bgimgOf(slug) { const own = S.bgimg_col && S.bgimg_col[slug || COL.slug]; return own || S.bgimg || {}; }
 function applyBgs(map, imgs, fx) {
-  const bg = map || S.bg || {}, bi = imgs || S.bgimg || {}, ef = fx || S.bgfx || {};
+  const bg = map || S.bg || {}, bi = imgs || bgimgOf(), ef = fx || S.bgfx || {};
   let pageFlip = false;
   document.body.classList.toggle('hdr-see', !!(ef.header && ef.header.alpha < 100));
   for (const [k, [sel, tone]] of Object.entries(SECS)) {
@@ -922,7 +924,7 @@ const HB_3D = { a: { text: 'Ver detalles y pedir', bg: '' }, b: { text: 'Ver tod
 const hbKey = () => is3D() ? 'hero_btns_3d' : 'hero_btns';
 let hbDraft = null;
 function hbCfg() { const s = S[hbKey()] || {}, d = is3D() ? HB_3D : HB_DEF; return { a: { ...d.a, ...(s.a || {}) }, b: { ...d.b, ...(s.b || {}) } }; }
-function heroIsDark() { const im = S.bgimg && S.bgimg.hero; if (im && im.url) return im.ink !== 'dark'; return lum((S.bg && S.bg.hero) || '#e9e9e9') < 140; }
+function heroIsDark() { const im = bgimgOf().hero; if (im && im.url) return im.ink !== 'dark'; return lum((S.bg && S.bg.hero) || '#e9e9e9') < 140; }
 function applyHeroBtns(cfg) {
   const c = cfg || hbCfg(), A = $('#wOpen'), B = $('#wAll');
   A.textContent = c.a.text || HB_DEF.a.text;
@@ -1014,7 +1016,8 @@ $('#bgForm').addEventListener('click', e => {
 $('#bgForm').addEventListener('input', e => { const r = e.target.closest('.cardrow'); if (r && e.target.type === 'color') { cardDraft[r.dataset.card] = e.target.value; cardsRefresh(); } });
 function openBg() {
   cardDraft = { ...(S.cards || {}) }; cardsRefresh();
-  bgDraft = { ...(S.bg || {}) }; imgDraft = JSON.parse(JSON.stringify(S.bgimg || {})); fxDraft = JSON.parse(JSON.stringify(S.bgfx || {}));
+  bgDraft = { ...(S.bg || {}) }; imgDraft = JSON.parse(JSON.stringify(bgimgOf()));
+  $('#bgCol').textContent = `Las imágenes de fondo son solo de «${COL.title}»; cada colección tiene las suyas. Los colores aplican en todas.`; fxDraft = JSON.parse(JSON.stringify(S.bgfx || {}));
   $$('#bgForm .bgrow').forEach(r => { const k = r.dataset.sec; bgImgControls(r); bgImgRefresh(r); markSw(`.bgrow[data-sec="${k}"]`, bgDraft[k]); r.querySelector('input[type=color]').value = /^#[0-9a-f]{6}$/i.test(bgDraft[k] || '') ? bgDraft[k] : '#f4f4f4'; });
   $('#dlgBg').showModal();
 }
@@ -1049,7 +1052,7 @@ $('#bgForm').addEventListener('click', e => {
 });
 $('#bgForm').addEventListener('input', e => { const r = e.target.closest('.bgrow'); if (!r || e.target.type !== 'color') return; bgDraft[r.dataset.sec] = e.target.value; markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, ''); applyBgs(bgDraft, imgDraft, fxDraft); });
 $('#bgReset').addEventListener('click', () => { cardDraft = {}; cardsRefresh(); bgDraft = {}; imgDraft = {}; fxDraft = {}; $$('#bgForm .bgrow').forEach(r => { markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, ''); bgImgRefresh(r); }); applyBgs(bgDraft, imgDraft, fxDraft); });
-$('#bgForm').addEventListener('submit', async e => { e.preventDefault(); if (await saveSettings({ bg: bgDraft, bgimg: imgDraft, bgfx: fxDraft, cards: cardDraft })) $('#dlgBg').close(); });
+$('#bgForm').addEventListener('submit', async e => { e.preventDefault(); if (await saveSettings(b => ({ bg: bgDraft, bgimg_col: { ...(b.bgimg_col || {}), [COL.slug]: imgDraft }, bgfx: fxDraft, cards: cardDraft }))) $('#dlgBg').close(); });
 $('#dlgBg').addEventListener('close', () => { applyBgs(); applyCards(); });
 $('#aBg').addEventListener('click', openBg);
 
