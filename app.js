@@ -28,6 +28,7 @@ const DEF = {
   catalog_text: 'Precios por pieza en MXN. El precio de mayoreo se aplica solo en tu bolsa al llegar a la cantidad mínima.',
   steps_title: 'Cómo pedir',
   eyebrow_3d: 'Impresión 3D en PLA',
+  catalog_text_3d: 'Precios por pieza en MXN. Cada pieza se imprime por pedido y el envío se cotiza con tu código postal.',
   about_3d: 'Imprimimos en 3D adornos y regalos navideños en PLA. Cada pieza se fabrica por pedido y está lista en 2 a 8 días hábiles.',
   step1: 'Arma tu bolsa con las prendas, tallas y colores que necesitas.',
   step2: 'Envíanos tu pedido por WhatsApp junto con tu logo o diseño.',
@@ -289,8 +290,7 @@ function colShip() {
 }
 function applyColMode() {
   const xmas = isXmas(), d3 = is3D();
-  const cat = document.getElementById('catalogo'); if (cat) cat.hidden = xmas;
-  $$('a[href="#catalogo"]').forEach(x => { x.hidden = xmas; });
+  $$('[data-k^="catalog_text"]').forEach(el => { el.dataset.k = d3 ? 'catalog_text_3d' : 'catalog_text'; });
   $$('[data-k^="eyebrow"]').forEach(el => { el.dataset.k = d3 ? 'eyebrow_3d' : 'eyebrow'; });
   $$('[data-k^="about"]').forEach(el => { el.dataset.k = d3 ? 'about_3d' : 'about'; });
   document.body.classList.toggle('mode-3d', d3);
@@ -433,10 +433,8 @@ function renderOptions(prefix, p, state) {
 let CI = [];
 function catalogItems() {
   const out = [], admin = editing && !preview;
-  for (const c of COLS) {
-    const saved = S.slides && S.slides[c.slug];
-    if (!Array.isArray(saved)) continue;
-    saved.filter(s => s && s.key).forEach((s, i) => {
+  for (const c of [COL]) {
+    slidesOf(c).forEach((s, i) => {
       const p = s.product_id ? P.find(x => x.id === s.product_id) || null : null;
       const img = s.image || (p && p.model_url) || null;
       if (!img && !p) return;
@@ -451,6 +449,7 @@ function renderCatalog() {
   const counts = {}; CI.forEach(it => counts[it.col.title] = (counts[it.col.title] || 0) + 1);
   const cats = ['Todas', ...COLS.map(c => c.title).filter(t => counts[t])];
   if (!cats.includes(cat)) cat = 'Todas';
+  $('#chips').hidden = cats.length < 3;
   $('#chips').innerHTML = cats.map(c => `<button class="chip" type="button" aria-pressed="${c === cat}" data-cat="${esc(c)}">${esc(c)}<span class="n">${c === 'Todas' ? CI.length : counts[c]}</span></button>`).join('');
   const shown = CI.map((it, k) => [it, k]).filter(([it]) => cat === 'Todas' || it.col.title === cat);
   $('#grid').innerHTML = shown.length ? shown.map(([it, k]) => card(it, k)).join('')
@@ -919,7 +918,7 @@ $('#temporada').addEventListener('click', e => { if (editing && !preview && e.ta
 
 /* ---------------- Hero buttons (text and colour, editable) ---------------- */
 const HB_DEF = { a: { text: 'Elegir talla y color', bg: '' }, b: { text: 'Ver todos los modelos', color: '', show: true } };
-const HB_3D = { a: { text: 'Ver detalles y pedir', bg: '' }, b: { text: 'Ver todos los modelos', color: '', show: false } };
+const HB_3D = { a: { text: 'Ver detalles y pedir', bg: '' }, b: { text: 'Ver todas las piezas', color: '', show: true } };
 const hbKey = () => is3D() ? 'hero_btns_3d' : 'hero_btns';
 let hbDraft = null;
 function hbCfg() { const s = S[hbKey()] || {}, d = is3D() ? HB_3D : HB_DEF; return { a: { ...d.a, ...(s.a || {}) }, b: { ...d.b, ...(s.b || {}) } }; }
@@ -931,11 +930,11 @@ function applyHeroBtns(cfg) {
   if (c.a.bg) { A.style.setProperty('--pick-bg', c.a.bg); A.style.setProperty('--pick-ink', lum(c.a.bg) < 150 ? '#f4f4f4' : '#0b0b0b'); }
   else { A.style.removeProperty('--pick-bg'); A.style.removeProperty('--pick-ink'); }
   B.textContent = c.b.text || HB_DEF.b.text;
-  B.hidden = c.b.show === false || isXmas();
+  B.hidden = c.b.show === false;
   B.style.setProperty('--line-c', c.b.color || (heroIsDark() ? '#14d600' : '#006dff'));
 }
 function goAllModels() {
-  cat = catalogItems().some(it => it.col.slug === COL.slug) ? COL.title : 'Todas'; renderCatalog();
+  cat = 'Todas'; renderCatalog();
   const el = document.getElementById('catalogo'); if (el) el.scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth', block: 'start' });
 }
 $('#wAll').addEventListener('click', goAllModels);
