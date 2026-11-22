@@ -305,6 +305,25 @@ function applyColMode() {
   $$('[data-k^="eyebrow"]').forEach(el => { el.dataset.k = d3 ? 'eyebrow_3d' : 'eyebrow'; });
   $$('[data-k^="about"]').forEach(el => { el.dataset.k = d3 ? 'about_3d' : 'about'; });
   document.body.classList.toggle('mode-3d', d3);
+  applyColVisibility();
+}
+// collections can be kept out of public view while the owner finishes them
+const colHidden = c => !!(S.col_hidden && S.col_hidden[c.slug]);
+const showAllCols = () => editing;
+function applyColVisibility() {
+  const all = showAllCols();
+  for (const c of COLS) {
+    const off = colHidden(c);
+    $$(`a[href="#${c.slug}"]`).forEach(x => { x.hidden = off && !all; x.classList.toggle('col-off', off && all); });
+  }
+  const xmasOn = COLS.filter(c => c.group === 'Navidad').some(c => all || !colHidden(c));
+  const dd = document.getElementById('navXmasWrap'); if (dd) dd.hidden = !xmasOn;
+  $$('.mnav-group').forEach(x => { x.hidden = !xmasOn; });
+  document.body.classList.toggle('col-is-hidden', colHidden(COL) && all);
+  if (colHidden(COL) && !all) {
+    const first = COLS.find(c => !colHidden(c));
+    if (first && first !== COL) { history.replaceState(null, '', '#' + first.slug); setCollection(first, false); }
+  }
 }
 const colWord = c => String((S.col_words && S.col_words[c.slug]) || c.word).slice(0, 24);
 const colText = (key, prop) => (S[key] && S[key][COL.slug]) || COL[prop];
@@ -445,6 +464,7 @@ let CI = [];
 function catalogItems() {
   const out = [], admin = editing && !preview;
   for (const c of COLS) {
+    if (colHidden(c) && !showAllCols()) continue;
     slidesOf(c).forEach((s, i) => {
       const p = s.product_id ? P.find(x => x.id === s.product_id) || null : null;
       const img = s.image || (p && p.model_url) || null;
@@ -646,6 +666,7 @@ function setAdmin(on) {
   if (on) rememberTaller();
   $('#adminLink').hidden = !(on || knowsTaller());
   $$('[data-k]').forEach(el => editing ? bindEditable(el) : unbindEditable(el));
+  applyColVisibility();
   if (P.length || on) { renderWheel(curId); renderCatalog(); renderFacts(); applySettings(); updateSend(); }
 }
 $('#adminLink').addEventListener('click', () => { if (!isAdmin) { $('#lgErr').hidden = true; $('#dlgLogin').showModal(); } });
@@ -892,6 +913,7 @@ function openHero() {
   const c = heroCfg(); hrDraft = { ...c };
   $('#hrCol').textContent = `Estás editando la portada de «${COL.title}». El título y los textos son de esta colección; la tipografía y los elementos aplican a todas.`;
   $('#hrFont').innerHTML = FONTS.map(f => `<option value="${esc(f.n)}">${esc(f.n)}</option>`).join('');
+  $('#hrPublic').checked = !colHidden(COL);
   $('#hrShowHead').checked = c.show; $('#hrWord').value = colWord(COL);
   $('#hrKicker').value = colText('col_kickers', 'kicker'); $('#hrLabel').value = colText('col_labels', 'label'); $('#hrLeft').value = S[is3D() ? 'eyebrow_3d' : 'eyebrow'] || DEF[is3D() ? 'eyebrow_3d' : 'eyebrow'];
   $('#hrFont').value = c.font; $('#hrSize').value = c.size; $('#hrSizeVal').textContent = c.size + '%';
@@ -927,10 +949,11 @@ $('#hrForm').addEventListener('submit', async e => {
     col_kickers: { ...(S.col_kickers || {}), [COL.slug]: $('#hrKicker').value.trim() || COL.kicker },
     col_labels: { ...(S.col_labels || {}), [COL.slug]: $('#hrLabel').value.trim() || COL.label },
     [hbKey()]: hbDraft || hbCfg(),
+    col_hidden: { ...(S.col_hidden || {}), [COL.slug]: !$('#hrPublic').checked },
     ...(is3D() ? { col_ship: { ...(S.col_ship || {}), [COL.slug]: $('#hbShip').value.trim() } } : { ship_default: $('#hbShip').value.trim() }),
     [is3D() ? 'eyebrow_3d' : 'eyebrow']: $('#hrLeft').value.trim() || DEF[is3D() ? 'eyebrow_3d' : 'eyebrow']
   });
-  if (ok) { $('#dlgHero').close(); renderRoll(); selectW(true); }
+  if (ok) { $('#dlgHero').close(); renderRoll(); selectW(true); applyColVisibility(); renderCatalog(); }
 });
 $('#dlgHero').addEventListener('close', () => { applySettings(); renderRoll(); });
 $('#aHero').addEventListener('click', openHero);
