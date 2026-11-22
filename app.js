@@ -354,8 +354,41 @@ function renderWheel(keepId) {
   f = k >= 0 ? k : 0;
   layoutW(true); selectW(true);
 }
+// Navidad 3D lays the same cards out as a magazine spread: the centre card upright in front,
+// its neighbours lower and leaning out, the outer pair higher, tucked behind and leaning in
+const rowMode = () => is3D();
+function rowPose(d) {
+  const a = Math.abs(d), s = Math.sign(d) || 0;
+  const cw = parseFloat(getComputedStyle(wheel).getPropertyValue('--cw')) || 210;
+  const ch = parseFloat(getComputedStyle(wheel).getPropertyValue('--ch')) || 286;
+  const seg = (t, pts) => { for (let k = 1; k < pts.length; k++) if (t <= pts[k][0]) { const [x0, y0] = pts[k - 1], [x1, y1] = pts[k]; return y0 + (y1 - y0) * (t - x0) / (x1 - x0); } return pts[pts.length - 1][1]; };
+  const x = s * seg(a, [[0, 0], [1, 1.1 * cw], [2, 1.62 * cw], [3, 2.05 * cw]]);
+  const y = seg(a, [[0, 0], [1, .16 * ch], [2, .04 * ch], [3, .1 * ch]]);
+  const r = s * seg(a, [[0, 0], [1, 8], [2, -6], [3, -8]]);
+  return { x, y, r };
+}
 function layoutW(instant) {
-  const n = SL.length, st = stepDeg(), cards = wcards.children;
+  const n = SL.length, st = stepDeg(), cards = wcards.children, row = rowMode();
+  wheel.classList.toggle('row', row);
+  if (row) {
+    for (let i = 0; i < cards.length; i++) {
+      let d = i - f; if (n > 4) d = mod(d + n / 2, n) - n / 2;
+      const a = Math.abs(d), c = cards[i], { x, y, r } = rowPose(d);
+      const prev = parseFloat(c.dataset.ang);
+      const jump = instant || (!isNaN(prev) && Math.abs(prev - d) > 2.5);
+      if (jump) c.style.transition = 'none';
+      c.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${r.toFixed(2)}deg)`;
+      c.dataset.ang = d;
+      if (jump) { void c.offsetWidth; c.style.transition = ''; }
+      c.style.zIndex = String(100 - Math.round(a * 10));
+      c.style.setProperty('--act', Math.max(0, 1 - a).toFixed(3));
+      c.style.visibility = a > 2.6 ? 'hidden' : '';
+      c.classList.toggle('is-active', a < .5);
+      c.setAttribute('aria-selected', a < .5 ? 'true' : 'false');
+      c.tabIndex = a < .5 ? 0 : -1;
+    }
+    return;
+  }
   for (let i = 0; i < cards.length; i++) {
     let d = i - f; if (n > 4) d = mod(d + n / 2, n) - n / 2;
     const ang = d * st, a = Math.abs(d), c = cards[i];
