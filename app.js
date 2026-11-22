@@ -27,6 +27,8 @@ const DEF = {
   catalog_title: 'Catálogo',
   catalog_text: 'Precios por pieza en MXN. El precio de mayoreo se aplica solo en tu bolsa al llegar a la cantidad mínima.',
   steps_title: 'Cómo pedir',
+  eyebrow_3d: 'Impresión 3D en PLA',
+  about_3d: 'Imprimimos en 3D adornos y regalos navideños en PLA. Cada pieza se fabrica por pedido y está lista en 2 a 8 días hábiles.',
   step1: 'Arma tu bolsa con las prendas, tallas y colores que necesitas.',
   step2: 'Envíanos tu pedido por WhatsApp junto con tu logo o diseño.',
   step3: 'Aprobamos el boceto, pagas el anticipo y producimos tu pedido.',
@@ -57,12 +59,13 @@ function waLink(text) { const n = waNumber(); return n ? `https://wa.me/${n}?tex
 function unitPrice(p, q) { return p.wholesale_price && p.wholesale_min && q >= p.wholesale_min ? Number(p.wholesale_price) : Number(p.price); }
 const priceLabel = p => Number(p.price) > 0 ? fmt(p.price) : 'Cotizar';
 function decoOf(p) { if (p.image_url) return 'image'; return /bordad/i.test(p.category + ' ' + p.name) ? 'emb' : 'dtf'; }
-function sizesOf(p) { const s = Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : []; return s.length ? s : (p.garment === 'sheet' ? ['Carta'] : ['S', 'M', 'L', 'XL']); }
+function sizesOf(p) { if (p.garment === 'print3d') return []; const s = Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : []; return s.length ? s : (p.garment === 'sheet' ? ['Carta'] : ['S', 'M', 'L', 'XL']); }
 function colorsOf(p) {
   const out = [{ n: 'Original', h: p.color || '#0b0b0b' }];
   for (const c of (Array.isArray(p.colors) ? p.colors : [])) {
     if (c && /^#[0-9a-f]{6}$/i.test(c.h) && !out.some(o => o.h.toLowerCase() === c.h.toLowerCase())) out.push({ n: c.n || c.h, h: c.h });
   }
+  if (p.garment === 'print3d') return out.slice(1);
   return p.garment === 'sheet' ? [] : out;
 }
 const bySort = (a, b) => (a.sort - b.sort) || a.name.localeCompare(b.name);
@@ -90,6 +93,10 @@ function garmentSVG(p, opt = {}) {
   const bar = `<path d="M100 27 L54 47 Q49 51 55 51 L145 51 Q151 51 146 47 Z" fill="none" stroke="#7a7a7a" stroke-width="3" stroke-linejoin="round"/>`;
   const wrap = inner => opt.bare ? inner : `<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(p.name)}">${inner}</svg>`;
 
+  if (g === 'print3d') {
+    const oc = safeColor(p.color, '#14d600');
+    return wrap(`<circle cx="100" cy="44" r="8" fill="none" stroke="#7a7a7a" stroke-width="3"/><rect x="86" y="54" width="28" height="20" rx="4" fill="#9b9b9b"/><circle cx="100" cy="150" r="74" fill="${oc}"/><path d="M30 142 Q100 176 170 142" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="9"/><ellipse cx="72" cy="114" rx="14" ry="24" fill="rgba(255,255,255,.28)" transform="rotate(30 72 114)"/>`);
+  }
   if (g === 'sheet' || g === 'photo') {
     if (g === 'photo' && p.image_url) {
       return wrap(`<clipPath id="${uid}"><rect x="34" y="36" width="132" height="196" rx="6"/></clipPath><rect x="34" y="36" width="132" height="196" rx="6" fill="#fff"/><image href="${esc(p.image_url)}" x="34" y="36" width="132" height="196" preserveAspectRatio="xMidYMid slice" clip-path="url(#${uid})"/>`);
@@ -195,7 +202,21 @@ function renderFacts() {
 }
 let FACT_AUTO = [];
 const FACT_POS = { big: [7, 9], small: [7, 66], icon: [76, 9] };
-function factsList() { return Array.isArray(S.facts) && S.facts.length ? S.facts : FACT_AUTO.map((t, i) => ({ id: 'f' + i, ...t })); }
+const FK = () => is3D() ? 'facts_3d' : 'facts';
+const FACTS_3D = [
+  { big: '01 Elige', small: 'Toca una pieza, revisa sus detalles y agrégala a tu bolsa.' },
+  { big: '02 Revisa', small: 'Tu bolsa es tu lista de pedido, no un cobro. Aquí no se paga nada.' },
+  { big: '03 Envía', small: 'Toca «Enviar pedido por WhatsApp» y escribe tu código postal para cotizar el envío.' },
+  { big: '04 Recibe', small: 'Imprimimos tu pedido en PLA en 2 a 8 días hábiles y te lo enviamos.' }
+];
+function factsList() {
+  if (is3D()) {
+    if (Array.isArray(S.facts_3d) && S.facts_3d.length) return S.facts_3d;
+    const look = Array.isArray(S.facts) ? S.facts : [];
+    return FACTS_3D.map((t, i) => { const l = look[i] || {}; return { id: 'd' + i, bg: l.bg || '#0b0b0b', ink: l.ink, inkSmall: l.inkSmall, pos: l.pos, ...t }; });
+  }
+  return Array.isArray(S.facts) && S.facts.length ? S.facts : FACT_AUTO.map((t, i) => ({ id: 'f' + i, ...t }));
+}
 const FICONS = {
   tag: '<path d="M3 12V4h8l10 10-8 8L3 12Z"/><circle cx="7.5" cy="8.5" r="1.5"/>',
   box: '<path d="M3 7l9-4 9 4v10l-9 4-9-4V7Z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
@@ -257,6 +278,23 @@ const COLS = [
   { slug: 'playeras-navidad', title: 'Playeras Navidad', word: 'Playeras Navidad', kicker: 'Colección navideña', label: 'Navidad 2026', group: 'Navidad', cat: 'Playeras Navidad' }
 ];
 let COL = COLS[0];
+// Navidad pages carry no catalog; Navidad 3D sells 3D-printed pieces, not garments
+const is3D = () => COL.slug === 'navidad-3d';
+const isXmas = () => COL.group === 'Navidad';
+const SHIP_3D = 'Envío: se cotiza con tu código postal';
+function colShip() {
+  const own = S.col_ship && S.col_ship[COL.slug];
+  if (own != null) return own;
+  return is3D() ? SHIP_3D : (S.ship_default != null ? S.ship_default : 'Costo de envío $150 a todo México');
+}
+function applyColMode() {
+  const xmas = isXmas(), d3 = is3D();
+  const cat = document.getElementById('catalogo'); if (cat) cat.hidden = xmas;
+  $$('a[href="#catalogo"]').forEach(x => { x.hidden = xmas; });
+  $$('[data-k^="eyebrow"]').forEach(el => { el.dataset.k = d3 ? 'eyebrow_3d' : 'eyebrow'; });
+  $$('[data-k^="about"]').forEach(el => { el.dataset.k = d3 ? 'about_3d' : 'about'; });
+  document.body.classList.toggle('mode-3d', d3);
+}
 const colWord = c => String((S.col_words && S.col_words[c.slug]) || c.word).slice(0, 24);
 const colText = (key, prop) => (S[key] && S[key][COL.slug]) || COL[prop];
 const wheel = $('#wheel'), wcards = $('#wheelCards');
@@ -304,7 +342,7 @@ function layoutW(instant) {
 }
 const SHIP_DEF = 'Costo de envío $150 a todo México';
 function setArc(s) {
-  const t = (s && s.ship) || (S.ship_default != null ? S.ship_default : SHIP_DEF);
+  const t = (s && s.ship) || colShip();
   $('#arcText').textContent = t; $('#wArc').setAttribute('aria-label', t); $('#wArc').style.display = t ? '' : 'none';
 }
 function selectW(force) {
@@ -385,7 +423,7 @@ function renderOptions(prefix, p, state) {
   const sizes = sizesOf(p), cols = colorsOf(p);
   if (!state.size || !sizes.includes(state.size)) state.size = sizes.includes('M') ? 'M' : sizes[0];
   $(`#${prefix}Sizes`).innerHTML = sizes.map(s => `<button type="button" class="size" role="radio" aria-checked="${s === state.size}" data-size="${esc(s)}">${esc(s)}</button>`).join('');
-  $(`#${prefix}SizesBox`).hidden = sizes.length < 2 && sizes[0] === 'Carta';
+  $(`#${prefix}SizesBox`).hidden = !sizes.length || (sizes.length < 2 && sizes[0] === 'Carta');
   $(`#${prefix}ColorsBox`).hidden = !cols.length;
   $(`#${prefix}Colors`).innerHTML = cols.map((c, i) => `<button type="button" class="cswatch" role="radio" aria-checked="${i === state.color}" aria-label="${esc(c.n)}" title="${esc(c.n)}" data-color="${i}" style="background:${safeColor(c.h)}"></button>`).join('');
   $(`#${prefix}ColorName`).textContent = cols[state.color] ? cols[state.color].n : '';
@@ -468,6 +506,7 @@ function openProduct(id, img) {
   $('#pdCat').textContent = p.category; $('#pdName').textContent = p.name;
   $('#pdBadge').hidden = !p.badge; $('#pdBadge').textContent = p.badge || '';
   $('#pdDesc').textContent = p.description || '';
+  $('#pd3d').hidden = p.garment !== 'print3d';
   $('#pdPrice').textContent = Number(p.price) > 0 ? fmt(p.price) + ' por pieza' : 'Precio a cotizar';
   $('#pdWs').textContent = p.wholesale_price && p.wholesale_min ? `Mayoreo: ${fmt(p.wholesale_price)} por pieza desde ${p.wholesale_min} piezas` : '';
   $('#pdQty').value = 1; renderOptions('pd', p, pd); pdTotal();
@@ -509,7 +548,7 @@ function renderBag() {
         <button class="bag-rm" type="button" data-rm="${i}">Quitar</button></div>
       <div class="bag-qty"><button class="iconbtn" type="button" data-q="${i}" data-d="-1" aria-label="Quitar una">−</button><span>${b.q}</span><button class="iconbtn" type="button" data-q="${i}" data-d="1" aria-label="Agregar una">+</button></div>
     </div>`;
-  }).join('') : `<div class="empty"><p>Tu bolsa está vacía.</p><p class="form-help">Elige un diseño, tu talla y tu color, y agrégalo aquí. Al final envías el pedido por WhatsApp.</p><a class="btn btn-dark" href="#temporada" data-close-bag style="margin-top:14px">Ver la temporada</a></div>`;
+  }).join('') : `<div class="empty"><p>Tu bolsa está vacía.</p><p class="form-help">Elige lo que te guste y agrégalo aquí. Al final envías el pedido por WhatsApp.</p><a class="btn btn-dark" href="#temporada" data-close-bag style="margin-top:14px">Ver la temporada</a></div>`;
   $('#bagFoot').hidden = !L.length;
   const total = L.reduce((s, b) => s + unitPrice(b.p, qtyOfProduct(b.id)) * b.q, 0);
   $('#bagTotal').textContent = fmt(total) + (L.some(b => !(Number(b.p.price) > 0)) ? ' + cotización' : '');
@@ -523,7 +562,10 @@ function orderText() {
   });
   const total = L.reduce((s, b) => s + unitPrice(b.p, qtyOfProduct(b.id)) * b.q, 0);
   const name = $('#bagName').value.trim(), notes = $('#bagNotes').value.trim();
-  return `Hola ${S.name}, quiero hacer este pedido:\n\n${lines.join('\n')}\n\nTotal estimado: ${fmt(total)}${notes ? `\n\nDetalles: ${notes}` : ''}${name ? `\n\nSoy ${name}.` : ''}`;
+  const cp = L.some(b => b.p.garment === 'print3d') ? '\n\nMi código postal para cotizar el envío: ' : '';
+  const quoted = L.some(b => !(Number(b.p.price) > 0));
+  const totalLine = !total ? 'Total: a cotizar' : `Total estimado: ${fmt(total)}${quoted ? ' más las piezas a cotizar' : ''}`;
+  return `Hola ${S.name}, quiero hacer este pedido:\n\n${lines.join('\n')}\n\n${totalLine}${notes ? `\n\nDetalles: ${notes}` : ''}${name ? `\n\nSoy ${name}.` : ''}${cp}`;
 }
 function updateSend() {
   const wa = waLink(orderText()), a = $('#bagSend');
@@ -556,7 +598,7 @@ async function load() {
   P = (p.data || []).map(norm);
   renderAll();
 }
-function renderAll() { applySettings(); renderRoll(); renderFacts(); renderWheel(curId); renderCatalog(); renderBag(); }
+function renderAll() { applyColMode(); applySettings(); renderRoll(); renderFacts(); renderWheel(curId); renderCatalog(); renderBag(); }
 
 /* ---------------- Collections (hash routes) + nav ---------------- */
 function colFromHash() { const x = location.hash.slice(1); return COLS.find(c => c.slug === x) || null; }
@@ -565,6 +607,7 @@ function setCollection(c, scroll) {
   $$('[data-col]').forEach(a => a.classList.toggle('on', a.dataset.col === c.slug));
   $('#navXmas').classList.toggle('on', c.group === 'Navidad');
   document.title = `${c.title} · ${S.name || DEF.name}`;
+  applyColMode(); applySettings(); renderFacts();
   curId = null; renderRoll(); renderWheel();
   if (c.cat && P.some(p => p.category === c.cat)) cat = c.cat; else if (changed) cat = 'Todas';
   renderCatalog();
@@ -831,13 +874,13 @@ function openHero() {
   $('#hrCol').textContent = `Estás editando la portada de «${COL.title}». El título y los textos son de esta colección; la tipografía y los elementos aplican a todas.`;
   $('#hrFont').innerHTML = FONTS.map(f => `<option value="${esc(f.n)}">${esc(f.n)}</option>`).join('');
   $('#hrShowHead').checked = c.show; $('#hrWord').value = colWord(COL);
-  $('#hrKicker').value = colText('col_kickers', 'kicker'); $('#hrLabel').value = colText('col_labels', 'label'); $('#hrLeft').value = S.eyebrow || DEF.eyebrow;
+  $('#hrKicker').value = colText('col_kickers', 'kicker'); $('#hrLabel').value = colText('col_labels', 'label'); $('#hrLeft').value = S[is3D() ? 'eyebrow_3d' : 'eyebrow'] || DEF[is3D() ? 'eyebrow_3d' : 'eyebrow'];
   $('#hrFont').value = c.font; $('#hrSize').value = c.size; $('#hrSizeVal').textContent = c.size + '%';
   $('#hrRoll').checked = c.roll; $('#hrRed').checked = c.red; $('#hrCross').checked = c.cross; $('#hrMark').checked = c.mark; $('#hrRing').checked = c.ring; $('#hrArrows').checked = c.arrows;
   $('#hrRedColor').value = /^#[0-9a-f]{6}$/i.test(c.redColor) ? c.redColor : '#ff2525';
   markSw('#hrRedSw', c.redColor);
   hbDraft = hbCfg(); hbFill(hbDraft);
-  $('#hbShip').value = S.ship_default != null ? S.ship_default : SHIP_DEF;
+  $('#hbShip').value = colShip();
   $('#dlgHero').showModal();
 }
 function markSw(box, col) { $$(`${box} .sw`).forEach(s => s.setAttribute('aria-pressed', String((s.dataset.c || '').toLowerCase() === String(col || '').toLowerCase()))); }
@@ -849,14 +892,14 @@ function readHero() {
   const w = ($('#hrWord').value.trim() || COL.word).slice(0, 24);
   const keep = S.col_words; S.col_words = { ...(S.col_words || {}), [COL.slug]: w }; renderRoll(); S.col_words = keep;
   $('#heroKicker').textContent = $('#hrKicker').value; $('#heroLabel').textContent = $('#hrLabel').value;
-  $$('[data-k="eyebrow"]').forEach(e => e.textContent = $('#hrLeft').value);
+  $$('[data-k^="eyebrow"]').forEach(e => e.textContent = $('#hrLeft').value);
 }
 $('#hrForm').addEventListener('input', e => { if (e.target.id === 'hrRedColor') { hrDraft.redColor = e.target.value; markSw('#hrRedSw', ''); } readHero(); });
 $('#hrForm').addEventListener('change', readHero);
 $('#hrRedSw').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; hrDraft.redColor = b.dataset.c; markSw('#hrRedSw', b.dataset.c); readHero(); });
-$('#hrReset').addEventListener('click', () => { hrDraft = { ...HERO_DEF }; $('#hrWord').value = COL.word; $('#hrKicker').value = COL.kicker; $('#hrLabel').value = COL.label; $('#hrLeft').value = DEF.eyebrow;
+$('#hrReset').addEventListener('click', () => { hrDraft = { ...HERO_DEF }; $('#hrWord').value = COL.word; $('#hrKicker').value = COL.kicker; $('#hrLabel').value = COL.label; $('#hrLeft').value = DEF[is3D() ? 'eyebrow_3d' : 'eyebrow'];
   $('#hrShowHead').checked = true; $('#hrFont').value = HERO_DEF.font; $('#hrSize').value = 100; $('#hrRoll').checked = $('#hrRed').checked = $('#hrCross').checked = $('#hrMark').checked = $('#hrRing').checked = $('#hrArrows').checked = true; markSw('#hrRedSw', HERO_DEF.redColor); readHero();
-  hbDraft = { a: { ...HB_DEF.a }, b: { ...HB_DEF.b } }; hbFill(hbDraft); applyHeroBtns(hbDraft); });
+  hbDraft = is3D() ? { a: { ...HB_3D.a }, b: { ...HB_3D.b } } : { a: { ...HB_DEF.a }, b: { ...HB_DEF.b } }; hbFill(hbDraft); applyHeroBtns(hbDraft); });
 $('#hrForm').addEventListener('submit', async e => {
   e.preventDefault(); readHero();
   const ok = await saveSettings({
@@ -864,9 +907,9 @@ $('#hrForm').addEventListener('submit', async e => {
     col_words: { ...(S.col_words || {}), [COL.slug]: ($('#hrWord').value.trim() || COL.word).slice(0, 24) },
     col_kickers: { ...(S.col_kickers || {}), [COL.slug]: $('#hrKicker').value.trim() || COL.kicker },
     col_labels: { ...(S.col_labels || {}), [COL.slug]: $('#hrLabel').value.trim() || COL.label },
-    eyebrow: $('#hrLeft').value.trim() || DEF.eyebrow,
-    hero_btns: hbDraft || hbCfg(),
-    ship_default: $('#hbShip').value.trim()
+    [hbKey()]: hbDraft || hbCfg(),
+    ...(is3D() ? { col_ship: { ...(S.col_ship || {}), [COL.slug]: $('#hbShip').value.trim() } } : { ship_default: $('#hbShip').value.trim() }),
+    [is3D() ? 'eyebrow_3d' : 'eyebrow']: $('#hrLeft').value.trim() || DEF[is3D() ? 'eyebrow_3d' : 'eyebrow']
   });
   if (ok) { $('#dlgHero').close(); renderRoll(); selectW(true); }
 });
@@ -876,8 +919,10 @@ $('#temporada').addEventListener('click', e => { if (editing && !preview && e.ta
 
 /* ---------------- Hero buttons (text and colour, editable) ---------------- */
 const HB_DEF = { a: { text: 'Elegir talla y color', bg: '' }, b: { text: 'Ver todos los modelos', color: '', show: true } };
+const HB_3D = { a: { text: 'Ver detalles y pedir', bg: '' }, b: { text: 'Ver todos los modelos', color: '', show: false } };
+const hbKey = () => is3D() ? 'hero_btns_3d' : 'hero_btns';
 let hbDraft = null;
-function hbCfg() { const s = S.hero_btns || {}; return { a: { ...HB_DEF.a, ...(s.a || {}) }, b: { ...HB_DEF.b, ...(s.b || {}) } }; }
+function hbCfg() { const s = S[hbKey()] || {}, d = is3D() ? HB_3D : HB_DEF; return { a: { ...d.a, ...(s.a || {}) }, b: { ...d.b, ...(s.b || {}) } }; }
 function heroIsDark() { const im = S.bgimg && S.bgimg.hero; if (im && im.url) return im.ink !== 'dark'; return lum((S.bg && S.bg.hero) || '#e9e9e9') < 140; }
 function applyHeroBtns(cfg) {
   const c = cfg || hbCfg(), A = $('#wOpen'), B = $('#wAll');
@@ -886,7 +931,7 @@ function applyHeroBtns(cfg) {
   if (c.a.bg) { A.style.setProperty('--pick-bg', c.a.bg); A.style.setProperty('--pick-ink', lum(c.a.bg) < 150 ? '#f4f4f4' : '#0b0b0b'); }
   else { A.style.removeProperty('--pick-bg'); A.style.removeProperty('--pick-ink'); }
   B.textContent = c.b.text || HB_DEF.b.text;
-  B.hidden = c.b.show === false;
+  B.hidden = c.b.show === false || isXmas();
   B.style.setProperty('--line-c', c.b.color || (heroIsDark() ? '#14d600' : '#006dff'));
 }
 function goAllModels() {
@@ -987,7 +1032,7 @@ function slidesOf(c) {
   const saved = S.slides && S.slides[c.slug];
   if (Array.isArray(saved)) return saved.filter(s => s && s.key);
   // default: one card per product of the collection (no repeats)
-  return P.filter(p => p.collection === c.slug && isApparel(p) && p.visible).sort(bySort).map(p => ({ key: 'p-' + p.id, product_id: p.id }));
+  return P.filter(p => p.collection === c.slug && (isApparel(p) || p.garment === 'print3d') && p.visible).sort(bySort).map(p => ({ key: 'p-' + p.id, product_id: p.id }));
 }
 function slideHTML(s, i, solo) {
   const p = s.p, img = s.image || (p && p.model_url);
@@ -1030,6 +1075,7 @@ async function saveSlides(list, keepKey) {
 $('#slProduct').addEventListener('change', () => { slDraft.product_id = $('#slProduct').value || null; slRefresh(); });
 $('#slText').addEventListener('input', () => { slDraft.text = $('#slText').value.trim(); slRefresh(); });
 $('#slShip').addEventListener('input', () => { slDraft.ship = $('#slShip').value.trim(); });
+$('#slEditProd').addEventListener('click', () => { const id = $('#slProduct').value; if (!id) return; $('#dlgSlide').close(); openEditor(id); });
 $('#slBg').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { slDraft.bg = b.dataset.c; slRefresh(); } if (e.target.closest('#slBgAuto')) { slDraft.bg = null; slRefresh(); } });
 $('#slBgColor').addEventListener('input', e => { slDraft.bg = e.target.value; slRefresh(); });
 $('#slFile').addEventListener('change', async e => {
@@ -1061,7 +1107,7 @@ $('#aSlide').addEventListener('click', () => openSlide(SL.length ? idxOf() : -1,
 /* ---------------- Admin: facts tiles editor (colors, texts, icons, free placement) ---------------- */
 let fxList = null, fxIdx = -1, ftDraft = null;
 const factsEditable = () => factsList().map(t => JSON.parse(JSON.stringify(t)));
-async function saveFacts(list) { const ok = await saveSettings({ facts: list }); if (ok) renderFacts(); return ok; }
+async function saveFacts(list) { const ok = await saveSettings({ [FK()]: list }); if (ok) renderFacts(); return ok; }
 // drag elements inside a tile (edit mode only); a click without movement opens the editor
 const fdrag = { on: false };
 $('#facts').addEventListener('pointerdown', e => {
@@ -1151,10 +1197,10 @@ $('#fxLeft').addEventListener('click', () => fxMove(-1));
 $('#fxRight').addEventListener('click', () => fxMove(1));
 $('#fxResetPos').addEventListener('click', () => { ftDraft.pos = null; fxRefresh(); });
 // save only the tile being edited, into the latest saved list
-function freshFacts(b) { return Array.isArray(b.facts) ? b.facts.map(t => ({ ...t })) : fxList.map(t => ({ ...t })); }
+function freshFacts(b) { const f = b[FK()]; return Array.isArray(f) && f.length ? f.map(t => ({ ...t })) : fxList.map(t => ({ ...t })); }
 $('#fxForm').addEventListener('submit', async e => {
   e.preventDefault(); fxList[fxIdx] = ftDraft;
-  const ok = await saveSettings(b => { const L = freshFacts(b), j = L.findIndex(t => t.id === ftDraft.id); if (j >= 0) L[j] = ftDraft; else L.push(ftDraft); return { facts: L, facts_title: fxTitle }; });
+  const ok = await saveSettings(b => { const L = freshFacts(b), j = L.findIndex(t => t.id === ftDraft.id); if (j >= 0) L[j] = ftDraft; else L.push(ftDraft); return { [FK()]: L, facts_title: fxTitle }; });
   if (ok) { renderFacts(); $('#dlgFact').close(); toast('Recuadro guardado'); }
 });
 $('#dlgFact').addEventListener('close', () => { $('#facts').style.setProperty('--fx-scale', (S.facts_title || 100) / 100); requestAnimationFrame(fitFacts); });
@@ -1162,7 +1208,7 @@ $('#fxDel').addEventListener('click', () => { $('#fxConfirm').hidden = false; })
 $('#fxDelNo').addEventListener('click', () => { $('#fxConfirm').hidden = true; });
 $('#fxDelYes').addEventListener('click', async () => {
   const gone = fxList[fxIdx] && fxList[fxIdx].id; fxList.splice(fxIdx, 1);
-  const ok = await saveSettings(b => ({ facts: freshFacts(b).filter(t => t.id !== gone) }));
+  const ok = await saveSettings(b => ({ [FK()]: freshFacts(b).filter(t => t.id !== gone) }));
   if (ok) { renderFacts(); $('#dlgFact').close(); toast('Recuadro quitado'); }
 });
 

@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap">
-<link rel="stylesheet" href="styles.css?v=202611220618">
+<link rel="stylesheet" href="styles.css?v=202611221706">
 <link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230b0b0b'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23f4f4f4' stroke-width='2.4' stroke-dasharray='3 2.4'/%3E%3C/svg%3E">
 </head>
 <body>
@@ -194,6 +194,12 @@
       <h3 id="pdName"></h3>
       <p class="pd-badge" id="pdBadge" hidden></p>
       <p class="pd-desc" id="pdDesc"></p>
+      <ul class="pd-3d" id="pd3d" hidden>
+        <li>Hecho en PLA, impreso en 3D</li>
+        <li>Se fabrica por pedido</li>
+        <li>Listo en 2 a 8 días hábiles</li>
+        <li>Envío: se cotiza con tu código postal</li>
+      </ul>
       <div class="pd-price"><span id="pdPrice"></span><span class="pd-ws" id="pdWs"></span></div>
       <div id="pdSizesBox"><p class="box-label">Talla</p><div class="sizes light" id="pdSizes" role="radiogroup" aria-label="Talla"></div></div>
       <div id="pdColorsBox"><p class="box-label">Color <span class="box-val" id="pdColorName"></span></p><div class="colors" id="pdColors" role="radiogroup" aria-label="Color"></div></div>
@@ -280,6 +286,7 @@
             <option value="hoodie">Sudadera con gorro</option>
             <option value="sheet">Hoja (stickers / tatuajes)</option>
             <option value="photo">Solo la foto</option>
+            <option value="print3d">Pieza impresa en 3D (PLA)</option>
           </select>
         </div>
       </div>
@@ -510,6 +517,7 @@
       <input id="slText" type="text" maxlength="60" placeholder="Usa el nombre del producto">
       <label for="slShip">Texto curvo sobre la flecha (envío)</label>
       <input id="slShip" type="text" maxlength="48" placeholder="Vacío = usa el texto general de Portada">
+      <button class="btn btn-sm btn-outline hb-auto" type="button" id="slEditProd">Editar precio y datos del producto</button>
       <span class="label">Imagen de la tarjeta</span>
       <div class="photo-row">
         <img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" id="slImg" alt="" hidden>
@@ -601,6 +609,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="supabase.js?v=2.45.4"></script>
-<script src="app.js?v=202611220618"></script>
+<script src="app.js?v=202611221706"></script>
 </body>
 </html>
