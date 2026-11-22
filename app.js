@@ -433,7 +433,7 @@ function renderOptions(prefix, p, state) {
 let CI = [];
 function catalogItems() {
   const out = [], admin = editing && !preview;
-  for (const c of [COL]) {
+  for (const c of COLS) {
     slidesOf(c).forEach((s, i) => {
       const p = s.product_id ? P.find(x => x.id === s.product_id) || null : null;
       const img = s.image || (p && p.model_url) || null;
@@ -608,7 +608,7 @@ function setCollection(c, scroll) {
   document.title = `${c.title} · ${S.name || DEF.name}`;
   applyColMode(); applySettings(); renderFacts();
   curId = null; renderRoll(); renderWheel();
-  if (c.cat && P.some(p => p.category === c.cat)) cat = c.cat; else if (changed) cat = 'Todas';
+  cat = c.title; // the catalog opens on this page's own collection
   renderCatalog();
   if (scroll) $('#temporada').scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth', block: 'start' });
 }
@@ -934,7 +934,7 @@ function applyHeroBtns(cfg) {
   B.style.setProperty('--line-c', c.b.color || (heroIsDark() ? '#14d600' : '#006dff'));
 }
 function goAllModels() {
-  cat = 'Todas'; renderCatalog();
+  cat = COL.title; renderCatalog();
   const el = document.getElementById('catalogo'); if (el) el.scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth', block: 'start' });
 }
 $('#wAll').addEventListener('click', goAllModels);
@@ -1284,7 +1284,7 @@ $('#aImport').addEventListener('click', async () => {
 
 /* ---------------- Boot ---------------- */
 RM.addEventListener?.('change', () => layoutW(true));
-COL = colFromHash() || COLS[0];
+COL = colFromHash() || COLS[0]; cat = COL.title;
 renderAll();
 load().then(() => { setCollection(COL, false); return checkSession(); });
 sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT' && isAdmin) setAdmin(false); });
