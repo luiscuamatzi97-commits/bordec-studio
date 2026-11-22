@@ -213,7 +213,7 @@ body.editing .top { position: relative; top: 0; }
 .qty-ctl input { width: 56px; height: 44px; text-align: center; border-radius: 12px; font-family: var(--f-mono); border: 1px solid var(--line); background: var(--white); color: var(--black); }
 
 /* ---------- Facts ---------- */
-.facts-sec { padding-block: 8px 24px; }
+.facts-sec { padding-block: 48px 24px; }
 .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .fact { border-radius: var(--r-md); padding: 24px; min-height: 180px; display: grid; align-content: space-between; gap: 20px; background: var(--white); }
 .fact b { font-family: var(--f-display); font-weight: 400; font-size: clamp(2.75rem, 2rem + 2.4vw, 4.5rem); line-height: .9; text-transform: uppercase; }
