@@ -257,7 +257,7 @@ const COLS = [
   { slug: 'playeras-navidad', title: 'Playeras Navidad', word: 'Playeras Navidad', kicker: 'Colección navideña', label: 'Navidad 2026', group: 'Navidad', cat: 'Playeras Navidad' }
 ];
 let COL = COLS[0];
-const colWord = c => String((S.col_words && S.col_words[c.slug]) || c.word).toUpperCase().slice(0, 24);
+const colWord = c => String((S.col_words && S.col_words[c.slug]) || c.word).slice(0, 24);
 const colText = (key, prop) => (S[key] && S[key][COL.slug]) || COL[prop];
 const wheel = $('#wheel'), wcards = $('#wheelCards');
 const TONES = ['light', 'black', 'white', 'graphite', 'red', 'light', 'gray', 'black', 'white', 'blue', 'graphite', 'light'];
@@ -302,12 +302,18 @@ function layoutW(instant) {
     c.tabIndex = a < .5 ? 0 : -1;
   }
 }
+const SHIP_DEF = 'Costo de envío $150 a todo México';
+function setArc(s) {
+  const t = (s && s.ship) || (S.ship_default != null ? S.ship_default : SHIP_DEF);
+  $('#arcText').textContent = t; $('#wArc').setAttribute('aria-label', t); $('#wArc').style.display = t ? '' : 'none';
+}
 function selectW(force) {
   const s = SL[idxOf()], p = s && s.p;
-  if (!s) { $('#wName').textContent = editing ? 'Agrega tarjetas con «+ Tarjeta»' : 'Pronto habrá diseños aquí'; $('#wPrice').textContent = ''; $('#wOpen').hidden = true; curKey = null; return; }
+  if (!s) { $('#wName').textContent = editing ? 'Agrega tarjetas con «+ Tarjeta»' : 'Pronto habrá diseños aquí'; $('#wPrice').textContent = ''; $('#wOpen').hidden = true; setArc(null); $('#wArc').style.display = 'none'; curKey = null; return; }
   if (!force && s.key === curKey) return;
   curKey = s.key; curId = p ? p.id : null; $('#wOpen').hidden = !p;
   $('#wName').textContent = s.text || (p ? p.name : '');
+  setArc(s);
   if (!p) { $('#wPrice').textContent = ''; return; }
   $('#wPrice').innerHTML = `<span>${esc(priceLabel(p))}</span>${p.wholesale_price && p.wholesale_min ? `<span>Mayoreo ${fmt(p.wholesale_price)} desde ${p.wholesale_min} pzs</span>` : ''}`;
 }
@@ -831,6 +837,7 @@ function openHero() {
   $('#hrRedColor').value = /^#[0-9a-f]{6}$/i.test(c.redColor) ? c.redColor : '#ff2525';
   markSw('#hrRedSw', c.redColor);
   hbDraft = hbCfg(); hbFill(hbDraft);
+  $('#hbShip').value = S.ship_default != null ? S.ship_default : SHIP_DEF;
   $('#dlgHero').showModal();
 }
 function markSw(box, col) { $$(`${box} .sw`).forEach(s => s.setAttribute('aria-pressed', String((s.dataset.c || '').toLowerCase() === String(col || '').toLowerCase()))); }
@@ -839,7 +846,7 @@ function readHero() {
   $('#hrSizeVal').textContent = hrDraft.size + '%';
   applyHero(hrDraft);
   // live text preview
-  const w = ($('#hrWord').value.trim() || COL.word).toUpperCase().slice(0, 24);
+  const w = ($('#hrWord').value.trim() || COL.word).slice(0, 24);
   const keep = S.col_words; S.col_words = { ...(S.col_words || {}), [COL.slug]: w }; renderRoll(); S.col_words = keep;
   $('#heroKicker').textContent = $('#hrKicker').value; $('#heroLabel').textContent = $('#hrLabel').value;
   $$('[data-k="eyebrow"]').forEach(e => e.textContent = $('#hrLeft').value);
@@ -847,7 +854,7 @@ function readHero() {
 $('#hrForm').addEventListener('input', e => { if (e.target.id === 'hrRedColor') { hrDraft.redColor = e.target.value; markSw('#hrRedSw', ''); } readHero(); });
 $('#hrForm').addEventListener('change', readHero);
 $('#hrRedSw').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; hrDraft.redColor = b.dataset.c; markSw('#hrRedSw', b.dataset.c); readHero(); });
-$('#hrReset').addEventListener('click', () => { hrDraft = { ...HERO_DEF }; $('#hrWord').value = COL.word.toUpperCase(); $('#hrKicker').value = COL.kicker; $('#hrLabel').value = COL.label; $('#hrLeft').value = DEF.eyebrow;
+$('#hrReset').addEventListener('click', () => { hrDraft = { ...HERO_DEF }; $('#hrWord').value = COL.word; $('#hrKicker').value = COL.kicker; $('#hrLabel').value = COL.label; $('#hrLeft').value = DEF.eyebrow;
   $('#hrShowHead').checked = true; $('#hrFont').value = HERO_DEF.font; $('#hrSize').value = 100; $('#hrRoll').checked = $('#hrRed').checked = $('#hrCross').checked = $('#hrMark').checked = $('#hrRing').checked = $('#hrArrows').checked = true; markSw('#hrRedSw', HERO_DEF.redColor); readHero();
   hbDraft = { a: { ...HB_DEF.a }, b: { ...HB_DEF.b } }; hbFill(hbDraft); applyHeroBtns(hbDraft); });
 $('#hrForm').addEventListener('submit', async e => {
@@ -858,9 +865,10 @@ $('#hrForm').addEventListener('submit', async e => {
     col_kickers: { ...(S.col_kickers || {}), [COL.slug]: $('#hrKicker').value.trim() || COL.kicker },
     col_labels: { ...(S.col_labels || {}), [COL.slug]: $('#hrLabel').value.trim() || COL.label },
     eyebrow: $('#hrLeft').value.trim() || DEF.eyebrow,
-    hero_btns: hbDraft || hbCfg()
+    hero_btns: hbDraft || hbCfg(),
+    ship_default: $('#hbShip').value.trim()
   });
-  if (ok) { $('#dlgHero').close(); renderRoll(); }
+  if (ok) { $('#dlgHero').close(); renderRoll(); selectW(true); }
 });
 $('#dlgHero').addEventListener('close', () => { applySettings(); renderRoll(); });
 $('#aHero').addEventListener('click', openHero);
@@ -1002,6 +1010,7 @@ function openSlide(i, isNew) {
   $('#slProduct').innerHTML = '<option value="">Ninguno (solo imagen)</option>' + opts.map(p => `<option value="${p.id}">${esc(p.name)}${p.collection === COL.slug ? '' : ' · ' + esc(p.category)}</option>`).join('');
   $('#slProduct').value = slDraft.product_id || '';
   $('#slText').value = slDraft.text || '';
+  $('#slShip').value = slDraft.ship || '';
   $('#slErr').hidden = true; $('#slConfirm').hidden = true;
   slRefresh(); $('#dlgSlide').showModal();
 }
@@ -1014,12 +1023,13 @@ function slRefresh() {
   $('#slLeft').disabled = slIdx <= 0; $('#slRight').disabled = slIdx >= slList.length - 1;
 }
 async function saveSlides(list, keepKey) {
-  const ok = await saveSettings({ slides: { ...(S.slides || {}), [COL.slug]: list.map(({ key, product_id, image, bg, text }) => ({ key, product_id: product_id || null, image: image || null, bg: bg || null, text: text || '' })) } });
+  const ok = await saveSettings({ slides: { ...(S.slides || {}), [COL.slug]: list.map(({ key, product_id, image, bg, text, ship }) => ({ key, product_id: product_id || null, image: image || null, bg: bg || null, text: text || '', ship: ship || '' })) } });
   if (ok) { renderWheel(keepKey); renderCatalog(); }
   return ok;
 }
 $('#slProduct').addEventListener('change', () => { slDraft.product_id = $('#slProduct').value || null; slRefresh(); });
 $('#slText').addEventListener('input', () => { slDraft.text = $('#slText').value.trim(); slRefresh(); });
+$('#slShip').addEventListener('input', () => { slDraft.ship = $('#slShip').value.trim(); });
 $('#slBg').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) { slDraft.bg = b.dataset.c; slRefresh(); } if (e.target.closest('#slBgAuto')) { slDraft.bg = null; slRefresh(); } });
 $('#slBgColor').addEventListener('input', e => { slDraft.bg = e.target.value; slRefresh(); });
 $('#slFile').addEventListener('change', async e => {
