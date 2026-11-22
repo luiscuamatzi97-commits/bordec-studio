@@ -190,6 +190,7 @@ function renderFacts() {
     { bg: '#1f1f1f', big: String(season).padStart(2, '0'), small: 'Diseños en nuestras colecciones de temporada', icon: 'shirt' }
   ];
   const tiles = factsList();
+  $('#facts').style.setProperty('--fx-scale', (S.facts_title || 100) / 100);
   $('#facts').innerHTML = tiles.map((t, i) => factHTML(t, i)).join('') + (editing && !preview ? '<button class="fact-add" type="button" id="factAdd">+ Recuadro</button>' : ''); requestAnimationFrame(fitFacts);
 }
 let FACT_AUTO = [];
@@ -213,19 +214,25 @@ const FICONS = {
 };
 const iconSVG = (name, col) => FICONS[name] ? `<svg viewBox="0 0 24 24" fill="none" stroke="${col || 'currentColor'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${FICONS[name]}</svg>` : '';
 const inkFor = bg => lum(bg || '#ffffff') < 140 ? '#f4f4f4' : '#0b0b0b';
+// every title in a group of tiles gets one size: the chosen size, shrunk together only if one would not fit
 function fitFacts() {
-  for (const tile of $$('#facts .fact.fx, .fx-prev-box .fact.fx, #fxPreview .fact.fx')) {
-    const big = tile.querySelector('[data-el="big"]'); if (!big) continue;
-    big.style.fontSize = '';
-    const T = tile.getBoundingClientRect(), ic = tile.querySelector('[data-el="icon"]');
-    if (!T.width) continue;
-    let fs = parseFloat(getComputedStyle(big).fontSize); const min = fs * .55;
-    for (let n = 0; n < 24; n++) {
-      const B = big.getBoundingClientRect(); let lim = T.right - 14;
+  const groups = [$$('#facts .fact.fx'), $$('#fxPreview .fact.fx'), $$('.fx-prev-box .fact.fx')];
+  for (const tiles of groups) {
+    const bigs = tiles.map(t => t.querySelector('[data-el="big"]'));
+    bigs.forEach(b => { if (b) b.style.fontSize = ''; });
+    let scale = 1, base = 0;
+    tiles.forEach((tile, k) => {
+      const big = bigs[k]; if (!big) return;
+      const T = tile.getBoundingClientRect(); if (!T.width) return;
+      const B = big.getBoundingClientRect(), ic = tile.querySelector('[data-el="icon"]');
+      base = base || parseFloat(getComputedStyle(big).fontSize);
+      let lim = T.right - 14;
       if (ic) { const I = ic.getBoundingClientRect(); if (I.left > B.left + 8 && I.top < B.bottom && I.bottom > B.top) lim = Math.min(lim, I.left - 10); }
-      if (B.right <= lim || fs <= min) break;
-      fs = Math.max(min, fs * .94); big.style.fontSize = fs + 'px';
-    }
+      if (B.right > lim && B.width > 0) scale = Math.min(scale, (lim - B.left) / B.width);
+    });
+    if (!base) continue;
+    const fs = base * Math.max(.45, scale);
+    bigs.forEach(b => { if (b) b.style.fontSize = fs + 'px'; });
   }
 }
 let fitRaf = 0;
@@ -1076,9 +1083,11 @@ $('#facts').addEventListener('pointerup', async e => {
 });
 $('#facts').addEventListener('click', e => { if (e.target.closest('#factAdd')) { e.stopPropagation(); openFact(-1); } });
 
+let fxTitle = 100;
 async function openFact(i) {
   try { const { data, error } = await sb.from('web_settings').select('data').eq('id', 1).maybeSingle(); if (!error && data && data.data) S = data.data; } catch (e) {}
   fxList = factsEditable();
+  fxTitle = S.facts_title || 100; $('#fxTitleSize').value = fxTitle; $('#fxTitleVal').textContent = fxTitle + '%';
   if (i < 0) { fxList.push({ id: 'f' + Date.now().toString(36), bg: '#f4f4f4', big: 'Nuevo', small: 'Escribe aquí un dato de tu taller', icon: 'star' }); i = fxList.length - 1; }
   fxIdx = i; ftDraft = { ...fxList[i] };
   $('#fxBig').value = ftDraft.big || ''; $('#fxSmall').value = ftDraft.small || '';
@@ -1098,12 +1107,14 @@ function fxRefresh() {
   $$('#fxIcons .fx-ic').forEach(b => b.setAttribute('aria-pressed', String(!ftDraft.iconImg && (b.dataset.ic || '') === (ftDraft.icon || ''))));
   const im = $('#fxIconImg'); im.hidden = !ftDraft.iconImg; if (ftDraft.iconImg) im.src = ftDraft.iconImg; $('#fxIconImgDel').hidden = !ftDraft.iconImg;
   $('#fxSizeVal').textContent = (ftDraft.iconSize || 44) + ' px';
+  $('#fxPreview').style.setProperty('--fx-scale', fxTitle / 100);
   $('#fxPreview').innerHTML = factHTML(ftDraft, 0); requestAnimationFrame(fitFacts);
   $('#fxLeft').disabled = fxIdx <= 0; $('#fxRight').disabled = fxIdx >= fxList.length - 1;
 }
 $('#fxForm').addEventListener('input', e => {
   if (e.target.id === 'fxBgColor') ftDraft.bg = e.target.value;
   if (e.target.id === 'fxBig') ftDraft.big = e.target.value;
+  if (e.target.id === 'fxTitleSize') { fxTitle = +e.target.value; $('#fxTitleVal').textContent = fxTitle + '%'; $('#facts').style.setProperty('--fx-scale', fxTitle / 100); $('#fxPreview').style.setProperty('--fx-scale', fxTitle / 100); requestAnimationFrame(fitFacts); }
   if (e.target.id === 'fxSmall') ftDraft.small = e.target.value;
   if (e.target.id === 'fxIconSize') ftDraft.iconSize = +e.target.value;
   if (e.target.id === 'fxIconColor') ftDraft.iconColor = e.target.value;
@@ -1133,9 +1144,10 @@ $('#fxResetPos').addEventListener('click', () => { ftDraft.pos = null; fxRefresh
 function freshFacts(b) { return Array.isArray(b.facts) ? b.facts.map(t => ({ ...t })) : fxList.map(t => ({ ...t })); }
 $('#fxForm').addEventListener('submit', async e => {
   e.preventDefault(); fxList[fxIdx] = ftDraft;
-  const ok = await saveSettings(b => { const L = freshFacts(b), j = L.findIndex(t => t.id === ftDraft.id); if (j >= 0) L[j] = ftDraft; else L.push(ftDraft); return { facts: L }; });
+  const ok = await saveSettings(b => { const L = freshFacts(b), j = L.findIndex(t => t.id === ftDraft.id); if (j >= 0) L[j] = ftDraft; else L.push(ftDraft); return { facts: L, facts_title: fxTitle }; });
   if (ok) { renderFacts(); $('#dlgFact').close(); toast('Recuadro guardado'); }
 });
+$('#dlgFact').addEventListener('close', () => { $('#facts').style.setProperty('--fx-scale', (S.facts_title || 100) / 100); requestAnimationFrame(fitFacts); });
 $('#fxDel').addEventListener('click', () => { $('#fxConfirm').hidden = false; });
 $('#fxDelNo').addEventListener('click', () => { $('#fxConfirm').hidden = true; });
 $('#fxDelYes').addEventListener('click', async () => {
