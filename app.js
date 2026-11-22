@@ -621,7 +621,11 @@ async function onEditBlur(e) {
   if (v !== S[k]) await saveSettings({ [k]: v });
 }
 async function saveSettings(patch) {
-  const next = { ...S, ...patch };
+  // start from what is saved right now, so a change made in another window is not overwritten
+  let base = S;
+  try { const { data, error } = await sb.from('web_settings').select('data').eq('id', 1).maybeSingle(); if (!error && data && data.data) base = data.data; } catch (e) {}
+  if (typeof patch === 'function') patch = patch(base);
+  const next = { ...base, ...patch };
   const { error } = await sb.from('web_settings').upsert({ id: 1, data: next, updated_at: new Date().toISOString() });
   if (error) { toast('No se guardó el cambio. Revisa tu conexión e inténtalo otra vez.', true); return false; }
   S = next; applySettings(); renderRoll(); updateSend(); toast('Cambio guardado'); return true;
@@ -1072,7 +1076,8 @@ $('#facts').addEventListener('pointerup', async e => {
 });
 $('#facts').addEventListener('click', e => { if (e.target.closest('#factAdd')) { e.stopPropagation(); openFact(-1); } });
 
-function openFact(i) {
+async function openFact(i) {
+  try { const { data, error } = await sb.from('web_settings').select('data').eq('id', 1).maybeSingle(); if (!error && data && data.data) S = data.data; } catch (e) {}
   fxList = factsEditable();
   if (i < 0) { fxList.push({ id: 'f' + Date.now().toString(36), bg: '#f4f4f4', big: 'Nuevo', small: 'Escribe aquí un dato de tu taller', icon: 'star' }); i = fxList.length - 1; }
   fxIdx = i; ftDraft = { ...fxList[i] };
@@ -1124,10 +1129,20 @@ const fxMove = d => { const t = fxIdx + d; if (t < 0 || t >= fxList.length) retu
 $('#fxLeft').addEventListener('click', () => fxMove(-1));
 $('#fxRight').addEventListener('click', () => fxMove(1));
 $('#fxResetPos').addEventListener('click', () => { ftDraft.pos = null; fxRefresh(); });
-$('#fxForm').addEventListener('submit', async e => { e.preventDefault(); fxList[fxIdx] = ftDraft; if (await saveFacts(fxList)) { $('#dlgFact').close(); toast('Recuadro guardado'); } });
+// save only the tile being edited, into the latest saved list
+function freshFacts(b) { return Array.isArray(b.facts) ? b.facts.map(t => ({ ...t })) : fxList.map(t => ({ ...t })); }
+$('#fxForm').addEventListener('submit', async e => {
+  e.preventDefault(); fxList[fxIdx] = ftDraft;
+  const ok = await saveSettings(b => { const L = freshFacts(b), j = L.findIndex(t => t.id === ftDraft.id); if (j >= 0) L[j] = ftDraft; else L.push(ftDraft); return { facts: L }; });
+  if (ok) { renderFacts(); $('#dlgFact').close(); toast('Recuadro guardado'); }
+});
 $('#fxDel').addEventListener('click', () => { $('#fxConfirm').hidden = false; });
 $('#fxDelNo').addEventListener('click', () => { $('#fxConfirm').hidden = true; });
-$('#fxDelYes').addEventListener('click', async () => { fxList.splice(fxIdx, 1); if (await saveFacts(fxList)) { $('#dlgFact').close(); toast('Recuadro quitado'); } });
+$('#fxDelYes').addEventListener('click', async () => {
+  const gone = fxList[fxIdx] && fxList[fxIdx].id; fxList.splice(fxIdx, 1);
+  const ok = await saveSettings(b => ({ facts: freshFacts(b).filter(t => t.id !== gone) }));
+  if (ok) { renderFacts(); $('#dlgFact').close(); toast('Recuadro quitado'); }
+});
 
 /* ---------------- Admin: page settings ---------------- */
 let pgLogo = '', pgFav = '';
