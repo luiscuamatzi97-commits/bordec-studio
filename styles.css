@@ -213,7 +213,7 @@ body.editing .top { position: relative; top: 0; }
 .qty-ctl input { width: 56px; height: 44px; text-align: center; border-radius: 12px; font-family: var(--f-mono); border: 1px solid var(--line); background: var(--white); color: var(--black); }
 
 /* ---------- Facts ---------- */
-.facts-sec { padding-block: 48px 24px; }
+.facts-sec { padding-block: 48px 56px; }
 .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .fact { border-radius: var(--r-md); padding: 24px; min-height: 180px; display: grid; align-content: space-between; gap: 20px; background: var(--white); }
 .fact b { font-family: var(--f-display); font-weight: 400; font-size: clamp(2.75rem, 2rem + 2.4vw, 4.5rem); line-height: .9; }
@@ -597,3 +597,11 @@ a { text-underline-offset: .22em; text-decoration-thickness: 1px; }
 /* 3D pieces: what the buyer needs to know before ordering */
 .pd-3d { margin: 0; padding: 12px 16px; list-style: none; display: grid; gap: 4px; border-radius: var(--r-sm); background: var(--light); font-size: var(--t-2); }
 .pd-3d li::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 8px; border-radius: 2px; background: var(--green); vertical-align: .1em; }
+
+/* Catalog cards: owner-picked colours (Fondos), same on every collection */
+#catalogo .card { background: var(--card-bg, var(--white)); color: var(--card-ink, inherit); }
+#catalogo .card .card-cat, #catalogo .card .card-ws { color: var(--card-muted, var(--gray-dark)); }
+#catalogo .card-visual { background: var(--card-panel, var(--light)); }
+#catalogo .card .btn.card-add { background: var(--card-btn, var(--black)); color: var(--card-btn-ink, var(--white)); }
+@media (hover: hover) and (pointer: fine) { #catalogo .card .btn.card-add:hover { background: color-mix(in srgb, var(--card-btn, var(--black)) 84%, var(--card-btn-ink, var(--white))); } }
+.cardrow { display: grid; gap: 8px; padding-block: 8px; border-top: 1px solid var(--line); }

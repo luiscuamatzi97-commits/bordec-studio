@@ -597,7 +597,7 @@ async function load() {
   P = (p.data || []).map(norm);
   renderAll();
 }
-function renderAll() { applyColMode(); applySettings(); renderRoll(); renderFacts(); renderWheel(curId); renderCatalog(); renderBag(); }
+function renderAll() { applyColMode(); applySettings(); applyCards(); renderRoll(); renderFacts(); renderWheel(curId); renderCatalog(); renderBag(); }
 
 /* ---------------- Collections (hash routes) + nav ---------------- */
 function colFromHash() { const x = location.hash.slice(1); return COLS.find(c => c.slug === x) || null; }
@@ -984,7 +984,36 @@ function bgImgRefresh(r) {
   box.querySelector('.bgimg-del').hidden = !im; box.querySelector('.bgimg-opts').hidden = !im;
   if (im) { box.querySelector('.bgimg-ink').value = im.ink || 'light'; box.querySelector('.bgimg-fit').value = im.fit || 'cover'; box.querySelector('.bgimg-dim').checked = !!im.dim; }
 }
+let cardDraft = {};
+// true when light text reads better than dark text on this colour (WCAG relative luminance)
+function darkGround(hex) {
+  const m = /^#([0-9a-f]{6})$/i.exec(String(hex).trim()); if (!m) return lum(hex) < 140;
+  const n = parseInt(m[1], 16), ch = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+  const L = .2126 * ch(n >> 16) + .7152 * ch((n >> 8) & 255) + .0722 * ch(n & 255);
+  return (1.05 / (L + .05)) > ((L + .05) / .05);
+}
+// catalog cards: card ground, the panel behind the photo and the button, with readable text on each
+function applyCards(c) {
+  c = c || S.cards || {}; const el = document.getElementById('catalogo'); if (!el) return;
+  const set = (v, val) => val ? el.style.setProperty(v, val) : el.style.removeProperty(v);
+  const bg = c.bg ? safeColor(c.bg, '') : '', btn = c.btn ? safeColor(c.btn, '') : '', panel = c.panel ? safeColor(c.panel, '') : '';
+  set('--card-bg', bg); set('--card-ink', bg ? (darkGround(bg) ? '#f4f4f4' : '#0b0b0b') : '');
+  set('--card-muted', bg ? (darkGround(bg) ? '#b5b5b5' : '#5f5f5f') : '');
+  set('--card-panel', panel);
+  set('--card-btn', btn); set('--card-btn-ink', btn ? (darkGround(btn) ? '#f4f4f4' : '#0b0b0b') : '');
+}
+function cardsRefresh() {
+  $$('#bgForm .cardrow').forEach(r => { const k = r.dataset.card, v = cardDraft[k] || ''; markSw(`.cardrow[data-card="${k}"]`, v); r.querySelector('input[type=color]').value = /^#[0-9a-f]{6}$/i.test(v) ? v : '#ffffff'; r.querySelector('[data-card-auto]').setAttribute('aria-pressed', String(!v)); });
+  applyCards(cardDraft);
+}
+$('#bgForm').addEventListener('click', e => {
+  const r = e.target.closest('.cardrow'); if (!r) return;
+  const sw = e.target.closest('[data-c]'); if (sw) { cardDraft[r.dataset.card] = sw.dataset.c; cardsRefresh(); return; }
+  if (e.target.closest('[data-card-auto]')) { delete cardDraft[r.dataset.card]; cardsRefresh(); }
+});
+$('#bgForm').addEventListener('input', e => { const r = e.target.closest('.cardrow'); if (r && e.target.type === 'color') { cardDraft[r.dataset.card] = e.target.value; cardsRefresh(); } });
 function openBg() {
+  cardDraft = { ...(S.cards || {}) }; cardsRefresh();
   bgDraft = { ...(S.bg || {}) }; imgDraft = JSON.parse(JSON.stringify(S.bgimg || {})); fxDraft = JSON.parse(JSON.stringify(S.bgfx || {}));
   $$('#bgForm .bgrow').forEach(r => { const k = r.dataset.sec; bgImgControls(r); bgImgRefresh(r); markSw(`.bgrow[data-sec="${k}"]`, bgDraft[k]); r.querySelector('input[type=color]').value = /^#[0-9a-f]{6}$/i.test(bgDraft[k] || '') ? bgDraft[k] : '#f4f4f4'; });
   $('#dlgBg').showModal();
@@ -1019,9 +1048,9 @@ $('#bgForm').addEventListener('click', e => {
   if (e.target.closest('.bgimg-del')) { delete imgDraft[k]; bgImgRefresh(r); applyBgs(bgDraft, imgDraft, fxDraft); }
 });
 $('#bgForm').addEventListener('input', e => { const r = e.target.closest('.bgrow'); if (!r || e.target.type !== 'color') return; bgDraft[r.dataset.sec] = e.target.value; markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, ''); applyBgs(bgDraft, imgDraft, fxDraft); });
-$('#bgReset').addEventListener('click', () => { bgDraft = {}; imgDraft = {}; fxDraft = {}; $$('#bgForm .bgrow').forEach(r => { markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, ''); bgImgRefresh(r); }); applyBgs(bgDraft, imgDraft, fxDraft); });
-$('#bgForm').addEventListener('submit', async e => { e.preventDefault(); if (await saveSettings({ bg: bgDraft, bgimg: imgDraft, bgfx: fxDraft })) $('#dlgBg').close(); });
-$('#dlgBg').addEventListener('close', () => applyBgs());
+$('#bgReset').addEventListener('click', () => { cardDraft = {}; cardsRefresh(); bgDraft = {}; imgDraft = {}; fxDraft = {}; $$('#bgForm .bgrow').forEach(r => { markSw(`.bgrow[data-sec="${r.dataset.sec}"]`, ''); bgImgRefresh(r); }); applyBgs(bgDraft, imgDraft, fxDraft); });
+$('#bgForm').addEventListener('submit', async e => { e.preventDefault(); if (await saveSettings({ bg: bgDraft, bgimg: imgDraft, bgfx: fxDraft, cards: cardDraft })) $('#dlgBg').close(); });
+$('#dlgBg').addEventListener('close', () => { applyBgs(); applyCards(); });
 $('#aBg').addEventListener('click', openBg);
 
 
