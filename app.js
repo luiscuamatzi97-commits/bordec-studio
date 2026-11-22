@@ -47,6 +47,9 @@ try { bag = JSON.parse(localStorage.getItem('bordec_bag') || '[]').filter(b => b
 const saveBag = () => { try { localStorage.setItem('bordec_bag', JSON.stringify(bag)); } catch (e) {} };
 
 /* ---------------- Utilities ---------------- */
+const COL_CODE = { 'avengers-doomsday': 'AV', 'navidad-3d': 'N3', 'playeras-navidad': 'PN' };
+const designCode = (slug, key) => `${COL_CODE[slug] || 'BD'}-${hash(key).toString(36).toUpperCase().slice(-4).padStart(4, '0')}`;
+let curDesign = null;
 function hash(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
 function lum(hex) {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return 0;
@@ -510,7 +513,7 @@ function card(it, k) {
 function openCatalogItem(k, edit) {
   const it = CI[+k]; if (!it) return;
   if (edit) { if (it.col.slug !== COL.slug) setCollection(it.col, false); return openSlide(it.i); }
-  openCard(it.s);
+  openCard(it.s, it.col);
 }
 $('#chips').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (!b) return; cat = b.dataset.cat; renderCatalog(); });
 $('#grid').addEventListener('click', e => {
@@ -523,14 +526,16 @@ $('#grid').addEventListener('keydown', e => { const o = e.target.closest('.card-
 /* ---------------- Product detail ---------------- */
 let cur = null; const pd = { size: null, color: 0 };
 let curImg = null;
-function openCard(s) {
+function openCard(s, col) {
   const img = s.image || (s.p && s.p.model_url) || null;
-  if (s.p) return openProduct(s.p.id, img);
+  if (s.p) return openProduct(s.p.id, img, { img, code: designCode((col || COL).slug, s.key), name: s.text || '' });
   if (img) { $('#imgView').src = img; $('#imgView').alt = s.text || ''; $('#imgCap').textContent = s.text || ''; $('#dlgImg').showModal(); }
 }
-function openProduct(id, img) {
+function openProduct(id, img, design) {
   if (editing && !preview) return openEditor(id);
   const p = P.find(x => x.id === id); if (!p) return;
+  curDesign = design || null;
+  $('#pdCode').hidden = !curDesign; $('#pdCode').textContent = curDesign ? `Código del diseño: ${curDesign.code}` : '';
   cur = p; pd.size = null; pd.color = 0; curImg = img || p.model_url || null;
   $('#pdVisual').innerHTML = curImg ? `<img class="pd-photo" src="${esc(curImg)}" alt="${esc(p.name)}">` : garmentSVG(p);
   $('#pdCat').textContent = p.category; $('#pdName').textContent = p.name;
@@ -546,7 +551,7 @@ function pdTotal() {
   const q = Math.max(1, parseInt($('#pdQty').value, 10) || 1);
   $('#pdTotal').textContent = cur && Number(cur.price) > 0 ? (() => { const u = unitPrice(cur, q); return `${q} × ${fmt(u)} = ${fmt(u * q)}${u < cur.price ? ' (mayoreo)' : ''}`; })() : '';
   const c = cur && colorsOf(cur)[pd.color];
-  const wa = cur && waLink(`Hola ${S.name}, me interesa: ${q} × ${cur.name}${pd.size ? `, talla ${pd.size}` : ''}${c ? `, color ${c.n}` : ''}. ¿Me das más información?`);
+  const wa = cur && waLink(`Hola ${S.name}, me interesa: ${q} × ${cur.name}${curDesign ? ` [${curDesign.code}]` : ''}${pd.size ? `, talla ${pd.size}` : ''}${c ? `, color ${c.n}` : ''}. ¿Me das más información?${curDesign && curDesign.img ? `\n\nFoto del diseño: ${curDesign.img}` : ''}`);
   $('#pdWa').hidden = !wa; if (wa) $('#pdWa').href = wa;
 }
 $('#pdSizes').addEventListener('click', e => { const b = e.target.closest('[data-size]'); if (!b) return; pd.size = b.dataset.size; renderOptions('pd', cur, pd); pdTotal(); });
@@ -557,9 +562,10 @@ $('#pdPlus').addEventListener('click', () => { $('#pdQty').value = (+$('#pdQty')
 $('#pdAdd').addEventListener('click', () => { const q = Math.max(1, parseInt($('#pdQty').value, 10) || 1); addToBag(cur, q, pd.size, colorsOf(cur)[pd.color]); $('#dlgProduct').close(); });
 
 /* ---------------- Bag ---------------- */
-const keyOf = b => `${b.id}|${b.size || ''}|${b.cn || ''}`;
+const keyOf = b => `${b.id}|${b.code || ''}|${b.size || ''}|${b.cn || ''}`;
 function addToBag(p, q, size, color) {
-  const item = { id: p.id, q, size: size || '', cn: color ? color.n : '', ch: color ? color.h : '' };
+  const d = curDesign && cur && cur.id === p.id ? curDesign : null;
+  const item = { id: p.id, q, size: size || '', cn: color ? color.n : '', ch: color ? color.h : '', code: d ? d.code : '', img: d ? d.img : '' };
   const it = bag.find(b => keyOf(b) === keyOf(item));
   if (it) it.q += q; else bag.push(item);
   saveBag(); renderBag(); toast(`Agregaste ${p.name}${size ? ' talla ' + size : ''} a tu bolsa`);
@@ -571,9 +577,9 @@ function renderBag() {
   $('#bagCount').textContent = n; $('#bagCount').classList.toggle('has', n > 0);
   $('#bagList').innerHTML = L.length ? L.map((b, i) => {
     const tq = qtyOfProduct(b.id), u = unitPrice(b.p, tq), isWs = u < b.p.price;
-    const opts = [b.size && `Talla ${b.size}`, b.cn && b.cn].filter(Boolean).join(', ');
+    const opts = [b.code && `Diseño ${b.code}`, b.size && `Talla ${b.size}`, b.cn && b.cn].filter(Boolean).join(', ');
     return `<div class="bag-item">
-      <div class="bag-thumb">${garmentSVG(b.p, { color: b.ch || undefined })}</div>
+      <div class="bag-thumb">${b.img ? `<img src="${esc(b.img)}" alt="">` : garmentSVG(b.p, { color: b.ch || undefined })}</div>
       <div><p class="bag-name">${esc(b.p.name)}</p><p class="bag-meta">${esc(opts)}${opts ? '<br>' : ''}${Number(b.p.price) > 0 ? `<span class="${isWs ? 'ws' : ''}">${fmt(u)} c/u${isWs ? ' · mayoreo' : ''}</span>` : 'A cotizar'}</p>
         <button class="bag-rm" type="button" data-rm="${i}">Quitar</button></div>
       <div class="bag-qty"><button class="iconbtn" type="button" data-q="${i}" data-d="-1" aria-label="Quitar una">−</button><span>${b.q}</span><button class="iconbtn" type="button" data-q="${i}" data-d="1" aria-label="Agregar una">+</button></div>
@@ -588,7 +594,7 @@ function orderText() {
   const L = bagLines();
   const lines = L.map(b => {
     const u = unitPrice(b.p, qtyOfProduct(b.id)); const opts = [b.size && `talla ${b.size}`, b.cn && `color ${b.cn}`].filter(Boolean).join(', ');
-    return `• ${b.q} × ${b.p.name}${opts ? ` (${opts})` : ''}${Number(b.p.price) > 0 ? ` — ${fmt(u)} c/u = ${fmt(u * b.q)}${u < b.p.price ? ' (mayoreo)' : ''}` : ' — a cotizar'}`;
+    return `• ${b.q} × ${b.p.name}${b.code ? ` [${b.code}]` : ''}${opts ? ` (${opts})` : ''}${Number(b.p.price) > 0 ? ` — ${fmt(u)} c/u = ${fmt(u * b.q)}${u < b.p.price ? ' (mayoreo)' : ''}` : ' — a cotizar'}${b.img ? `\n   Foto del diseño: ${b.img}` : ''}`;
   });
   const total = L.reduce((s, b) => s + unitPrice(b.p, qtyOfProduct(b.id)) * b.q, 0);
   const name = $('#bagName').value.trim(), notes = $('#bagNotes').value.trim();
