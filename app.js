@@ -378,41 +378,66 @@ function renderOptions(prefix, p, state) {
   $(`#${prefix}ColorName`).textContent = cols[state.color] ? cols[state.color].n : '';
 }
 
-/* ---------------- Catalog ---------------- */
-function renderCatalog() {
-  const list = P.filter(p => p.visible || (editing && !preview)).sort((a, b) => a.category.localeCompare(b.category) || bySort(a, b));
-  const counts = {}; list.forEach(p => counts[p.category] = (counts[p.category] || 0) + 1);
-  const cats = ['Todas', ...Object.keys(counts).sort((a, b) => a.localeCompare(b))];
-  if (!cats.includes(cat)) cat = 'Todas';
-  $('#chips').innerHTML = cats.map(c => `<button class="chip" type="button" aria-pressed="${c === cat}" data-cat="${esc(c)}">${esc(c)}<span class="n">${c === 'Todas' ? list.length : counts[c]}</span></button>`).join('');
-  const shown = cat === 'Todas' ? list : list.filter(p => p.category === cat);
-  $('#grid').innerHTML = shown.length ? shown.map(card).join('') : `<div class="empty"><p>${editing ? 'Aún no hay prendas. Usa «+ Prenda» para agregar la primera.' : 'No hay prendas en esta categoría.'}</p></div>`;
-  $('#catList').innerHTML = Object.keys(counts).map(c => `<option value="${esc(c)}">`).join('');
+/* ---------------- Catalog: built from the wheel cards the owner uploaded ---------------- */
+let CI = [];
+function catalogItems() {
+  const out = [], admin = editing && !preview;
+  for (const c of COLS) {
+    const saved = S.slides && S.slides[c.slug];
+    if (!Array.isArray(saved)) continue;
+    saved.filter(s => s && s.key).forEach((s, i) => {
+      const p = s.product_id ? P.find(x => x.id === s.product_id) || null : null;
+      const img = s.image || (p && p.model_url) || null;
+      if (!img && !p) return;
+      if (p && !p.visible && !admin) return;
+      out.push({ col: c, i, s: { ...s, p }, p, img, name: s.text || (p ? p.name : c.title) });
+    });
+  }
+  return out;
 }
-function card(p) {
-  const ws = p.wholesale_price && p.wholesale_min ? `<span class="card-ws"><span>Mayoreo ${fmt(p.wholesale_price)}</span><span>${p.wholesale_min}+ pzs</span></span>` : '';
-  const action = editing && !preview ? `<button class="btn btn-dark card-add" type="button" data-edit="${p.id}">Editar</button>`
-    : `<button class="btn btn-dark card-add" type="button" data-open="${p.id}">${sizesOf(p).length > 1 || colorsOf(p).length > 1 ? 'Elegir' : 'Agregar'}</button>`;
+function renderCatalog() {
+  CI = catalogItems();
+  const counts = {}; CI.forEach(it => counts[it.col.title] = (counts[it.col.title] || 0) + 1);
+  const cats = ['Todas', ...COLS.map(c => c.title).filter(t => counts[t])];
+  if (!cats.includes(cat)) cat = 'Todas';
+  $('#chips').innerHTML = cats.map(c => `<button class="chip" type="button" aria-pressed="${c === cat}" data-cat="${esc(c)}">${esc(c)}<span class="n">${c === 'Todas' ? CI.length : counts[c]}</span></button>`).join('');
+  const shown = CI.map((it, k) => [it, k]).filter(([it]) => cat === 'Todas' || it.col.title === cat);
+  $('#grid').innerHTML = shown.length ? shown.map(([it, k]) => card(it, k)).join('')
+    : `<div class="empty"><p>${editing && !preview ? 'Aún no hay tarjetas. Usa «+ Tarjeta» arriba para subir la primera; aparecerá aquí también.' : 'Pronto habrá diseños aquí.'}</p></div>`;
+  $('#catList').innerHTML = [...new Set(P.map(p => p.category))].map(c => `<option value="${esc(c)}">`).join('');
+}
+function card(it, k) {
+  const p = it.p, admin = editing && !preview;
+  const ws = p && p.wholesale_price && p.wholesale_min ? `<span class="card-ws"><span>Mayoreo ${fmt(p.wholesale_price)}</span><span>${p.wholesale_min}+ pzs</span></span>` : '';
+  const label = !p ? 'Ver' : sizesOf(p).length > 1 || colorsOf(p).length > 1 ? 'Elegir' : 'Agregar';
+  const action = admin ? `<button class="btn btn-dark card-add" type="button" data-sedit="${k}">Editar</button>`
+    : `<button class="btn btn-dark card-add" type="button" data-slide="${k}">${label}</button>`;
+  const visual = it.img ? `<img class="card-photo" src="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">` : garmentSVG(p);
   return `<article class="card">
-    <div class="card-visual" data-open="${p.id}" role="button" tabindex="0" aria-label="Ver ${esc(p.name)}">
-      ${p.badge ? `<span class="card-badge">${esc(p.badge)}</span>` : ''}${p.collection ? `<span class="card-season">${esc((COLS.find(c => c.slug === p.collection) || {}).title || '')}</span>` : ''}${p.visible ? '' : '<span class="card-hidden">Oculta</span>'}
-      ${p.model_url ? `<img class="card-photo" src="${esc(p.model_url)}" alt="${esc(p.name)}" loading="lazy">` : garmentSVG(p)}
+    <div class="card-visual" data-slide="${k}" role="button" tabindex="0" aria-label="Ver ${esc(it.name)}">
+      ${p && p.badge ? `<span class="card-badge">${esc(p.badge)}</span>` : ''}${p && !p.visible ? '<span class="card-hidden">Oculta</span>' : ''}
+      ${visual}
     </div>
     <div class="card-body">
-      <span class="card-cat">${esc(p.category)}</span>
-      <span class="card-name">${esc(p.name)}</span>
+      <span class="card-cat">${esc(it.col.title)}</span>
+      <span class="card-name">${esc(it.name)}</span>
       ${ws}
-      <div class="card-row"><span class="card-price">${priceLabel(p)}</span>${action}</div>
+      <div class="card-row"><span class="card-price">${p ? priceLabel(p) : ''}</span>${action}</div>
     </div>
   </article>`;
 }
+function openCatalogItem(k, edit) {
+  const it = CI[+k]; if (!it) return;
+  if (edit) { if (it.col.slug !== COL.slug) setCollection(it.col, false); return openSlide(it.i); }
+  openCard(it.s);
+}
 $('#chips').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (!b) return; cat = b.dataset.cat; renderCatalog(); });
 $('#grid').addEventListener('click', e => {
-  const ed = e.target.closest('[data-edit]'), o = e.target.closest('[data-open]');
-  if (ed) return openEditor(ed.dataset.edit);
-  if (o) openProduct(o.dataset.open);
+  const ed = e.target.closest('[data-sedit]'), o = e.target.closest('[data-slide]');
+  if (ed) return openCatalogItem(ed.dataset.sedit, true);
+  if (o) openCatalogItem(o.dataset.slide, editing && !preview);
 });
-$('#grid').addEventListener('keydown', e => { const o = e.target.closest('.card-visual'); if (o && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openProduct(o.dataset.open); } });
+$('#grid').addEventListener('keydown', e => { const o = e.target.closest('.card-visual'); if (o && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCatalogItem(o.dataset.slide, editing && !preview); } });
 
 /* ---------------- Product detail ---------------- */
 let cur = null; const pd = { size: null, color: 0 };
@@ -846,11 +871,7 @@ function applyHeroBtns(cfg) {
   B.style.setProperty('--line-c', c.b.color || (heroIsDark() ? '#14d600' : '#006dff'));
 }
 function goAllModels() {
-  let c = 'Todas';
-  const mine = P.filter(p => p.visible && p.collection === COL.slug);
-  if (COL.cat && P.some(p => p.visible && p.category === COL.cat)) c = COL.cat;
-  else if (mine.length) { const n = {}; mine.forEach(p => n[p.category] = (n[p.category] || 0) + 1); c = Object.keys(n).sort((x, y) => n[y] - n[x])[0]; }
-  cat = c; renderCatalog();
+  cat = catalogItems().some(it => it.col.slug === COL.slug) ? COL.title : 'Todas'; renderCatalog();
   const el = document.getElementById('catalogo'); if (el) el.scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth', block: 'start' });
 }
 $('#wAll').addEventListener('click', goAllModels);
@@ -983,7 +1004,7 @@ function slRefresh() {
 }
 async function saveSlides(list, keepKey) {
   const ok = await saveSettings({ slides: { ...(S.slides || {}), [COL.slug]: list.map(({ key, product_id, image, bg, text }) => ({ key, product_id: product_id || null, image: image || null, bg: bg || null, text: text || '' })) } });
-  if (ok) renderWheel(keepKey);
+  if (ok) { renderWheel(keepKey); renderCatalog(); }
   return ok;
 }
 $('#slProduct').addEventListener('change', () => { slDraft.product_id = $('#slProduct').value || null; slRefresh(); });
