@@ -457,7 +457,7 @@ function renderOptions(prefix, p, state) {
   if (!state.size || !sizes.includes(state.size)) state.size = sizes.includes('M') ? 'M' : sizes[0];
   $(`#${prefix}Sizes`).innerHTML = sizes.map(s => `<button type="button" class="size" role="radio" aria-checked="${s === state.size}" data-size="${esc(s)}">${esc(s)}</button>`).join('');
   $(`#${prefix}SizesBox`).hidden = !sizes.length || (sizes.length < 2 && sizes[0] === 'Carta');
-  $(`#${prefix}ColorsBox`).hidden = !cols.length;
+  $(`#${prefix}ColorsBox`).hidden = cols.length < 2; // a single colour is not a choice
   $(`#${prefix}Colors`).innerHTML = cols.map((c, i) => `<button type="button" class="cswatch" role="radio" aria-checked="${i === state.color}" aria-label="${esc(c.n)}" title="${esc(c.n)}" data-color="${i}" style="background:${safeColor(c.h)}"></button>`).join('');
   $(`#${prefix}ColorName`).textContent = cols[state.color] ? cols[state.color].n : '';
 }
@@ -550,7 +550,7 @@ function openProduct(id, img, design) {
 function pdTotal() {
   const q = Math.max(1, parseInt($('#pdQty').value, 10) || 1);
   $('#pdTotal').textContent = cur && Number(cur.price) > 0 ? (() => { const u = unitPrice(cur, q); return `${q} × ${fmt(u)} = ${fmt(u * q)}${u < cur.price ? ' (mayoreo)' : ''}`; })() : '';
-  const c = cur && colorsOf(cur)[pd.color];
+  const c = cur && colorsOf(cur).length > 1 ? colorsOf(cur)[pd.color] : null;
   const wa = cur && waLink(`Hola ${S.name}, me interesa: ${q} × ${cur.name}${curDesign ? ` [${curDesign.code}]` : ''}${pd.size ? `, talla ${pd.size}` : ''}${c ? `, color ${c.n}` : ''}. ¿Me das más información?${curDesign && curDesign.img ? `\n\nFoto del diseño: ${curDesign.img}` : ''}`);
   $('#pdWa').hidden = !wa; if (wa) $('#pdWa').href = wa;
 }
@@ -559,7 +559,7 @@ $('#pdColors').addEventListener('click', e => { const b = e.target.closest('[dat
 $('#pdQty').addEventListener('input', pdTotal);
 $('#pdMinus').addEventListener('click', () => { $('#pdQty').value = Math.max(1, (+$('#pdQty').value || 1) - 1); pdTotal(); });
 $('#pdPlus').addEventListener('click', () => { $('#pdQty').value = (+$('#pdQty').value || 0) + 1; pdTotal(); });
-$('#pdAdd').addEventListener('click', () => { const q = Math.max(1, parseInt($('#pdQty').value, 10) || 1); addToBag(cur, q, pd.size, colorsOf(cur)[pd.color]); $('#dlgProduct').close(); });
+$('#pdAdd').addEventListener('click', () => { const q = Math.max(1, parseInt($('#pdQty').value, 10) || 1); addToBag(cur, q, pd.size, colorsOf(cur).length > 1 ? colorsOf(cur)[pd.color] : null); $('#dlgProduct').close(); });
 
 /* ---------------- Bag ---------------- */
 const keyOf = b => `${b.id}|${b.code || ''}|${b.size || ''}|${b.cn || ''}`;
