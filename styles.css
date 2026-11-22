@@ -605,3 +605,31 @@ a { text-underline-offset: .22em; text-decoration-thickness: 1px; }
 #catalogo .card .btn.card-add { background: var(--card-btn, var(--black)); color: var(--card-btn-ink, var(--white)); }
 @media (hover: hover) and (pointer: fine) { #catalogo .card .btn.card-add:hover { background: color-mix(in srgb, var(--card-btn, var(--black)) 84%, var(--card-btn-ink, var(--white))); } }
 .cardrow { display: grid; gap: 8px; padding-block: 8px; border-top: 1px solid var(--line); }
+
+/* Footer: one rounded panel, an invitation and its button, the name set large, links and round social buttons */
+.foot { background: transparent; padding-block: 24px 16px; }
+.foot-panel { background: var(--graphite); color: var(--light); border-radius: var(--r-lg); padding: clamp(24px, 4vw, 48px); display: grid; gap: clamp(24px, 3vw, 36px); }
+.foot-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-bottom: clamp(24px, 3vw, 36px); border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent); }
+.foot-cta { display: grid; gap: 8px; max-width: 60ch; }
+.foot-cta-h { margin: 0; font-family: var(--f-display); font-weight: 500; font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem); line-height: 1.1; }
+.foot-cta-p { margin: 0; color: color-mix(in srgb, currentColor 72%, transparent); font-size: var(--t-1); }
+.foot .foot-btn { background: var(--light); color: var(--ink); border-color: transparent; }
+@media (hover: hover) and (pointer: fine) { .foot .foot-btn:hover { background: var(--white); } }
+.foot-panel .foot-giant { margin: 0; color: currentColor; font-size: clamp(3rem, 1rem + 9vw, 9rem); line-height: .95; overflow: visible; white-space: normal; overflow-wrap: break-word; min-width: 0; }
+.foot-bottom { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 16px 32px; font-size: var(--t-meta); }
+.foot-info { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 24px; color: color-mix(in srgb, currentColor 65%, transparent); }
+.foot-info a { color: inherit; }
+.foot-nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.foot-nav a { color: inherit; text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .foot-nav a:hover { text-decoration: underline; } }
+.foot-social { display: flex; gap: 8px; }
+.soc { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--light); color: var(--ink); transition: transform var(--m-150) var(--ease-out); }
+.soc svg { width: 20px; height: 20px; }
+@media (hover: hover) and (pointer: fine) { .soc:hover { transform: translateY(-2px); } }
+.soc:active { transform: scale(.95); }
+.foot-base { display: flex; justify-content: flex-end; padding-top: 12px; font-size: var(--t-meta); color: var(--gray); }
+@media (max-width: 899.98px) {
+  .foot-bottom { grid-template-columns: minmax(0, 1fr); }
+  .foot-top .foot-btn { width: 100%; }
+}
+@media (max-width: 899.98px) { .foot-nav a { padding-block: 10px; font-size: var(--t-2); } }

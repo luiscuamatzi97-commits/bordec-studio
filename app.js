@@ -27,6 +27,7 @@ const DEF = {
   catalog_title: 'Catálogo',
   catalog_text: 'Precios por pieza en MXN. El precio de mayoreo se aplica solo en tu bolsa al llegar a la cantidad mínima.',
   steps_title: 'Cómo pedir',
+  foot_cta: '¿Listo para tu pedido?',
   eyebrow_3d: 'Impresión 3D en PLA',
   catalog_text_3d: 'Precios por pieza en MXN. Cada pieza se imprime por pedido y el envío se cotiza con tu código postal.',
   about_3d: 'Imprimimos en 3D adornos y regalos navideños en PLA. Cada pieza se fabrica por pedido y está lista en 2 a 8 días hábiles.',
@@ -168,20 +169,30 @@ function applySettings() {
     logo.src = S.logo_url; logo.alt = S.name || DEF.name; logo.hidden = false; $('#wordmark').hidden = true;
   } else { if (logo) logo.remove(); $('#wordmark').hidden = false; }
   setFavicon(S.favicon_url || S.logo_url);
-  $('#year').textContent = new Date().getFullYear();
   const wa = waLink(`Hola ${S.name}, quiero información sobre sus prendas.`);
   $('#footWa').hidden = !wa; if (wa) $('#footWa').href = wa;
-  const rows = [];
-  if (S.whatsapp) rows.push(['WhatsApp', `<a href="${esc(wa)}" target="_blank" rel="noopener">${esc(S.whatsapp)}</a>`]);
-  if (S.instagram) rows.push(['Instagram', link(S.instagram)]);
-  if (S.facebook) rows.push(['Facebook', link(S.facebook)]);
-  if (S.tiktok) rows.push(['TikTok', link(S.tiktok)]);
-  if (S.email) rows.push(['Correo', `<span>${esc(S.email)}</span>`]);
-  if (S.location) rows.push(['Ubicación', esc(S.location)]);
-  if (S.hours) rows.push(['Horario', esc(S.hours)]);
-  if (!rows.length) rows.push(['Contacto', isAdmin ? 'Agrega tu WhatsApp y redes en «Logo y contacto».' : 'Pronto publicaremos nuestros datos de contacto.']);
-  $('#footList').innerHTML = rows.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join('');
+  // footer: small facts on the left, round social buttons on the right
+  const info = [];
+  if (S.location) info.push(esc(S.location));
+  if (S.hours) info.push(esc(S.hours));
+  if (S.email) info.push(`<a href="mailto:${esc(S.email)}">${esc(S.email)}</a>`);
+  if (!info.length && !S.whatsapp) info.push(isAdmin ? 'Agrega tu WhatsApp y redes en «Logo y contacto».' : 'Pronto publicaremos nuestros datos de contacto.');
+  info.push(`© ${new Date().getFullYear()} ${esc(S.name || DEF.name)}`);
+  $('#footInfo').innerHTML = info.map(x => `<li>${x}</li>`).join('');
+  const url = u => /^https?:\/\//i.test(u) ? u : 'https://' + String(u).replace(/^@/, '');
+  const soc = [];
+  if (S.instagram) soc.push(['Instagram', url(/instagram\.com/i.test(S.instagram) ? S.instagram : 'instagram.com/' + S.instagram.replace(/^@/, '')), SOC.ig]);
+  if (S.facebook) soc.push(['Facebook', url(S.facebook), SOC.fb]);
+  if (S.tiktok) soc.push(['TikTok', url(/tiktok\.com/i.test(S.tiktok) ? S.tiktok : 'tiktok.com/@' + S.tiktok.replace(/^@/, '')), SOC.tt]);
+  if (wa) soc.push(['WhatsApp', wa, SOC.wa]);
+  $('#footSocial').innerHTML = soc.map(([n, h, svg]) => `<a class="soc" href="${esc(h)}" target="_blank" rel="noopener" aria-label="${n}" title="${n}">${svg}</a>`).join('');
 }
+const SOC = {
+  ig: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor"/></svg>',
+  fb: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H8v3h2.5V21h3Z" fill="currentColor"/></svg>',
+  tt: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3c.3 2.2 1.6 3.7 3.8 3.9v2.8c-1.4.1-2.6-.3-3.8-1v5.8c0 3.3-2.4 5.5-5.4 5.5S4.8 17.6 4.8 14.8c0-3.2 2.8-5.6 6.2-5.1v2.9c-1.5-.4-3.2.5-3.2 2.2 0 1.4 1.1 2.4 2.3 2.4 1.4 0 2.4-.9 2.4-2.7V3h3Z" fill="currentColor"/></svg>',
+  wa: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8L3.5 20.5l4.3-1.1A8.5 8.5 0 1 0 12 3.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.2 8.3c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.7 1.6c.1.2 0 .5-.1.6l-.5.6c-.1.2-.1.4 0 .5.6 1.1 1.5 2 2.6 2.6.2.1.4.1.5 0l.6-.5c.2-.1.4-.2.6-.1l1.6.7c.3.1.4.3.4.5v.5c0 .3 0 .5-.4.7-.5.3-1.2.5-1.9.4-2.9-.4-5.6-3.1-6-6-.1-.7.1-1.4.4-1.9Z" fill="currentColor"/></svg>'
+};
 function link(u) {
   const url = /^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^@/, 'instagram.com/');
   return `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''))}</a>`;
@@ -632,11 +643,18 @@ function setAdmin(on) {
   document.body.classList.toggle('editing', editing);
   $('#adminbar').hidden = !on;
   $('#adminLink').textContent = on ? 'Estás en modo edición' : 'Acceso para el taller';
+  if (on) rememberTaller();
+  $('#adminLink').hidden = !(on || knowsTaller());
   $$('[data-k]').forEach(el => editing ? bindEditable(el) : unbindEditable(el));
   if (P.length || on) { renderWheel(curId); renderCatalog(); renderFacts(); applySettings(); updateSend(); }
 }
 $('#adminLink').addEventListener('click', () => { if (!isAdmin) { $('#lgErr').hidden = true; $('#dlgLogin').showModal(); } });
-if (location.hash === '#admin') setTimeout(() => !isAdmin && $('#dlgLogin').showModal(), 400);
+// the workshop entry stays out of the public footer: open bordecstudio.com/?taller once on your device
+function knowsTaller() { try { return localStorage.getItem('bordec_taller') === '1'; } catch (e) { return false; } }
+function rememberTaller() { try { localStorage.setItem('bordec_taller', '1'); } catch (e) {} }
+const askTaller = /[?&]taller\b/.test(location.search) || location.hash === '#admin' || location.hash === '#taller';
+if (askTaller) { rememberTaller(); setTimeout(() => !isAdmin && $('#dlgLogin').showModal(), 400); }
+$('#adminLink').hidden = !knowsTaller();
 $('#loginForm').addEventListener('submit', async e => {
   e.preventDefault();
   const email = $('#lgEmail').value.trim(), password = $('#lgPass').value, err = $('#lgErr');
@@ -819,10 +837,10 @@ function applyHero(cfg) {
 }
 
 /* ---------------- Section backgrounds (editable) ---------------- */
-const SECS = { page: ['body', 'light'], header: ['.top', 'light'], hero: ['#temporada', 'light'], facts: ['#datos', 'light'], catalog: ['#catalogo', 'light'], howto: ['#pedir', 'dark'], footer: ['#contacto', 'dark'] };
+const SECS = { page: ['body', 'light'], header: ['.top', 'light'], hero: ['#temporada', 'light'], facts: ['#datos', 'light'], catalog: ['#catalogo', 'light'], howto: ['#pedir', 'dark'], footer: ['.foot-panel', 'dark'] };
 const FLIP_TO_DARK = { '--black': '#f4f4f4', '--white': '#161616', '--muted-on-dark': '#5f5f5f', '--gray-dark': '#b5b5b5', '--line': '#3a3a3a', '--light': '#262626', '--graphite': '#e9e9e9' };
 const FLIP_TO_LIGHT = { '--white': '#0b0b0b', '--muted-on-dark': '#5f5f5f', '--graphite': '#e2e2e2', '--graphite-2': '#d0d0d0', '--gray': '#6b6b6b' };
-const BG_DEF = { page: '#f4f4f4', header: '#f4f4f4', hero: '#e9e9e9', facts: '#f4f4f4', catalog: '#f4f4f4', howto: '#0b0b0b', footer: '#0b0b0b' };
+const BG_DEF = { page: '#f4f4f4', header: '#f4f4f4', hero: '#e9e9e9', facts: '#f4f4f4', catalog: '#f4f4f4', howto: '#0b0b0b', footer: '#1f1f1f' };
 const rgba = (hex, a) => { const n = parseInt(String(hex).slice(1), 16); return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${a})`; };
 const ROOT_TOK = {}, OWN_BG = new Set(['header', 'hero', 'howto', 'footer']); // sections that paint their own ground
 function restoreTokens(el) {
