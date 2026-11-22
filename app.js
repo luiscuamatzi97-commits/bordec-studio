@@ -27,6 +27,8 @@ const DEF = {
   catalog_title: 'Catálogo',
   catalog_text: 'Precios por pieza en MXN. El precio de mayoreo se aplica solo en tu bolsa al llegar a la cantidad mínima.',
   steps_title: 'Cómo pedir',
+  home_title: 'Todo lo que hacemos',
+  home_sub: 'Bordado, estampado DTF e impresión 3D',
   foot_cta: '¿Listo para tu pedido?',
   eyebrow_3d: 'Impresión 3D en PLA',
   catalog_text_3d: 'Precios por pieza en MXN. Cada pieza se imprime por pedido y el envío se cotiza con tu código postal.',
@@ -323,10 +325,11 @@ function applyColVisibility() {
   const dd = document.getElementById('navXmasWrap'); if (dd) dd.hidden = !xmasOn;
   $$('.mnav-group').forEach(x => { x.hidden = !xmasOn; });
   document.body.classList.toggle('col-is-hidden', colHidden(COL) && all);
-  if (colHidden(COL) && !all) {
+  if (colHidden(COL) && !all && !isHomeRoute()) {
     const first = COLS.find(c => !colHidden(c));
     if (first && first !== COL) { history.replaceState(null, '', '#' + first.slug); setCollection(first, false); }
   }
+  applyHomeMode();
 }
 const colWord = c => String((S.col_words && S.col_words[c.slug]) || c.word).slice(0, 24);
 const colText = (key, prop) => (S[key] && S[key][COL.slug]) || COL[prop];
@@ -679,6 +682,123 @@ async function load() {
 }
 function renderAll() { applyColMode(); applySettings(); applyCards(); renderRoll(); renderFacts(); renderWheel(curId); renderCatalog(); renderBag(); }
 
+/* ---------------- Home: a living mosaic of everything Bordec makes ---------------- */
+const homePublished = () => !!S.home_published;
+const isHomeRoute = () => location.hash === '#inicio' || (!location.hash && homePublished());
+let homeOn = false, homeTimer = 0;
+function applyHomeMode() {
+  const canSee = homePublished() || editing;
+  let on = isHomeRoute();
+  if (on && !canSee) { on = false; if (location.hash === '#inicio') history.replaceState(null, '', '#' + COL.slug); }
+  homeOn = on;
+  document.body.classList.toggle('mode-home', on);
+  $('#inicio').hidden = !on;
+  ['#temporada', '#datos', '#catalogo'].forEach(s => { const el = $(s); if (el) el.hidden = on; });
+  $$('[data-home]').forEach(x => { x.hidden = !canSee; x.classList.toggle('on', on); x.classList.toggle('col-off', !homePublished() && editing); });
+  $$('.nav [data-col], .mnav [data-col]').forEach(x => { if (on) x.classList.remove('on'); });
+  $('.brand').setAttribute('href', homePublished() ? '#inicio' : '#' + COLS[0].slug);
+  $('#homeTools').hidden = !(on && editing);
+  $('#homePub').checked = homePublished();
+  if (on) { const first = !$('#inicio').dataset.shown; renderHome(); if (first) homeEnter(); else startShuffle(); } else stopShuffle();
+}
+// columns of the barrel: how many tiles, their size and how far each column turns away
+const HCOLS = [{ n: 4, k: .64, r: -28 }, { n: 3, k: .84, r: -14 }, { n: 3, k: 1, r: 0 }, { n: 3, k: .84, r: 14 }, { n: 4, k: .64, r: 28 }];
+const HPRIO = [2, 1, 3, 0, 4]; // the centre column gets the first tiles
+const homeTiles = () => (Array.isArray(S.home_tiles) ? S.home_tiles : []).filter(t => t && t.id);
+function homeLinkOk(t) {
+  if (!t.link) return false;
+  const c = COLS.find(x => x.slug === t.link);
+  if (c) return editing || !colHidden(c);
+  return ['catalogo', 'pedir', 'contacto'].includes(t.link);
+}
+function renderHome() {
+  const tiles = homeTiles();
+  const slots = HCOLS.reduce((s, c) => s + c.n, 0);
+  // the first tiles land in the centre, then the inner columns, then the outer ones
+  const order = []; HPRIO.forEach(ci => { for (let r = 0; r < HCOLS[ci].n; r++) order.push([ci, r]); });
+  const grid = HCOLS.map(c => Array(c.n).fill(null));
+  order.forEach(([ci, r], k) => { grid[ci][r] = k < tiles.length ? tiles[k] : { empty: true, k }; });
+  $('#homeMosaic').innerHTML = HCOLS.map((c, ci) => `<div class="hcol" style="--k:${c.k};--r:${c.r}deg">${grid[ci].map(t => {
+    if (t.empty) return `<div class="hslot"><button class="htile empty" type="button" ${editing ? 'data-hnew' : 'tabindex="-1" aria-hidden="true"'}>${editing ? '<span>+</span>' : ''}</button></div>`;
+    const go = homeLinkOk(t);
+    return `<div class="hslot"><button class="htile" type="button" data-hid="${esc(t.id)}" ${!go && !editing ? 'tabindex="-1"' : ''} aria-label="${esc(t.label || 'Ver')}" title="${esc(t.label || '')}">${t.img ? `<img src="${esc(t.img)}" alt="" loading="lazy" draggable="false">` : '<span class="htile-blank"></span>'}</button></div>`;
+  }).join('')}</div>`).join('');
+  if (tiles.length > slots && editing) toast(`El mosaico muestra ${slots} cuadros; los demás quedan guardados.`);
+}
+// a slow puzzle: every few seconds two tiles trade places, gliding to each other's spot
+function swapTiles() {
+  if (document.hidden || !homeOn) return;
+  const tiles = $$('#homeMosaic .htile:not(:hover)');
+  if (tiles.length < 2) return;
+  const A = tiles[Math.floor(Math.random() * tiles.length)];
+  let B = A; while (B === A) B = tiles[Math.floor(Math.random() * tiles.length)];
+  const sa = A.parentElement, sb = B.parentElement, ra = A.getBoundingClientRect(), rb = B.getBoundingClientRect();
+  sa.appendChild(B); sb.appendChild(A);
+  for (const [el, from] of [[A, ra], [B, rb]]) {
+    const to = el.getBoundingClientRect();
+    el.style.transition = 'none';
+    el.style.transform = `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width})`;
+    el.style.zIndex = '2';
+  }
+  void A.offsetWidth;
+  for (const el of [A, B]) { el.style.transition = ''; el.style.transform = ''; setTimeout(() => { el.style.zIndex = ''; }, 1500); }
+}
+// the mosaic enters once, centre first, then starts trading places
+function homeEnter() {
+  const sec = $('#inicio'); sec.dataset.shown = '1';
+  $$('#homeMosaic .hslot').forEach(s => { const r = s.getBoundingClientRect(), m = $('#homeMosaic').getBoundingClientRect(); s.style.setProperty('--i', Math.round(Math.hypot(r.left + r.width / 2 - (m.left + m.width / 2), r.top + r.height / 2 - (m.top + m.height / 2)) / 60)); });
+  sec.classList.add('enter'); setTimeout(() => { sec.classList.remove('enter'); startShuffle(); }, 1700);
+}
+function startShuffle() { stopShuffle(); if (RM.matches) return; homeTimer = setInterval(swapTiles, 2600); }
+function stopShuffle() { clearInterval(homeTimer); homeTimer = 0; }
+function goHomeLink(link) {
+  const c = COLS.find(x => x.slug === link);
+  if (c) { location.hash = c.slug; return; }
+  const first = COLS.find(x => !colHidden(x)) || COLS[0];
+  const target = link === 'pedir' ? '#datos' : link === 'contacto' ? '#contacto' : '#catalogo';
+  if (link === 'contacto') { $(target).scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth' }); return; }
+  location.hash = first.slug;
+  setTimeout(() => { const el = $(target); if (el) el.scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth' }); }, 350);
+}
+$('#homeMosaic').addEventListener('click', e => {
+  const nw = e.target.closest('[data-hnew]'); if (nw) return openTile(-1);
+  const t = e.target.closest('[data-hid]'); if (!t) return;
+  const tile = homeTiles().find(x => x.id === t.dataset.hid); if (!tile) return;
+  if (editing) return openTile(homeTiles().indexOf(tile));
+  if (homeLinkOk(tile)) goHomeLink(tile.link);
+});
+// editor
+let tlList = [], tlIdx = -1, tlDraft = null;
+function openTile(i) {
+  tlList = homeTiles().map(t => ({ ...t }));
+  if (i < 0) { tlList.push({ id: 'h' + Date.now().toString(36), img: '', label: '', link: '' }); i = tlList.length - 1; }
+  tlIdx = i; tlDraft = { ...tlList[i] };
+  $('#tlLink').innerHTML = '<option value="">A ningún lado</option>' + COLS.map(c => `<option value="${c.slug}">Colección: ${esc(c.title)}${colHidden(c) ? ' (oculta)' : ''}</option>`).join('') + '<option value="catalogo">Catálogo completo</option><option value="pedir">Cómo pedir</option><option value="contacto">Contacto</option>';
+  $('#tlLink').value = tlDraft.link || ''; $('#tlLabel').value = tlDraft.label || '';
+  $('#tlPos').textContent = `Cuadro ${i + 1} de ${tlList.length}. Los primeros van en el centro del mosaico.`;
+  tlRefresh(); $('#dlgTile').showModal();
+}
+function tlRefresh() {
+  const im = $('#tlImg'); im.hidden = !tlDraft.img; if (tlDraft.img) im.src = tlDraft.img; $('#tlEmpty').hidden = !!tlDraft.img;
+  $('#tlLeft').disabled = tlIdx <= 0; $('#tlRight').disabled = tlIdx >= tlList.length - 1;
+}
+$('#tlFile').addEventListener('change', async e => {
+  const fl = e.target.files[0]; if (!fl) return; toast('Subiendo foto…');
+  try { tlDraft.img = await upload(fl, 'home', 1200); tlRefresh(); toast('Foto lista. Guarda el cuadro para publicarla.'); }
+  catch (err) { toast('No se pudo subir la foto. Prueba con un JPG o PNG de menos de 5 MB.', true); }
+  e.target.value = '';
+});
+$('#tlLabel').addEventListener('input', () => { tlDraft.label = $('#tlLabel').value.trim(); });
+$('#tlLink').addEventListener('change', () => { tlDraft.link = $('#tlLink').value; });
+async function saveTiles(fn, msg) { const ok = await saveSettings(b => ({ home_tiles: fn((Array.isArray(b.home_tiles) ? b.home_tiles : []).map(t => ({ ...t }))) })); if (ok) { renderHome(); $('#dlgTile').close(); toast(msg); } }
+$('#tlForm').addEventListener('submit', e => { e.preventDefault(); saveTiles(L => { const j = L.findIndex(t => t.id === tlDraft.id); if (j >= 0) L[j] = tlDraft; else L.push(tlDraft); return L; }, 'Cuadro guardado'); });
+$('#tlDel').addEventListener('click', () => saveTiles(L => L.filter(t => t.id !== tlDraft.id), 'Cuadro quitado'));
+const tlMove = dir => saveTiles(L => { const j = L.findIndex(t => t.id === tlDraft.id), k = j + dir; if (j < 0 || k < 0 || k >= L.length) return L; L[j] = tlDraft; [L[j], L[k]] = [L[k], L[j]]; return L; }, 'Cuadro movido');
+$('#tlLeft').addEventListener('click', () => tlMove(-1));
+$('#tlRight').addEventListener('click', () => tlMove(1));
+$('#homeAdd').addEventListener('click', () => openTile(-1));
+$('#homePub').addEventListener('change', async () => { if (await saveSettings({ home_published: $('#homePub').checked })) applyHomeMode(); });
+
 /* ---------------- Collections (hash routes) + nav ---------------- */
 function colFromHash() { const x = location.hash.slice(1); return COLS.find(c => c.slug === x) || null; }
 function setCollection(c, scroll) {
@@ -693,7 +813,7 @@ function setCollection(c, scroll) {
   if (scroll) $('#temporada').scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth', block: 'start' });
 }
 const closeXmas = () => { $('#xmasMenu').hidden = true; $('#navXmas').setAttribute('aria-expanded', 'false'); };
-addEventListener('hashchange', () => { const c = colFromHash(); if (c) setCollection(c, true); closeXmas(); });
+addEventListener('hashchange', () => { const c = colFromHash(); if (c) setCollection(c, true); else applyHomeMode(); closeXmas(); });
 $('#navXmas').addEventListener('click', e => { e.stopPropagation(); const open = $('#xmasMenu').hidden; $('#xmasMenu').hidden = !open; $('#navXmas').setAttribute('aria-expanded', String(open)); });
 document.addEventListener('click', e => { if (!e.target.closest('#navXmasWrap')) closeXmas(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeXmas(); });

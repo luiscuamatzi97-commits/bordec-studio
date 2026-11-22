@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap">
-<link rel="stylesheet" href="styles.css?v=202611222033">
+<link rel="stylesheet" href="styles.css?v=202611222333">
 <link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230b0b0b'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23f4f4f4' stroke-width='2.4' stroke-dasharray='3 2.4'/%3E%3C/svg%3E">
 </head>
 <body class="is-loading">
@@ -80,6 +80,7 @@
             <span id="wordmark" class="wordmark" data-k="name">Bordec Studio</span>
     </a>
     <nav class="nav" aria-label="Secciones">
+      <a href="#inicio" data-home>Inicio</a>
       <a href="#avengers-doomsday" data-col="avengers-doomsday">Avengers Doomsday</a>
       <div class="navdd" id="navXmasWrap">
         <button class="navdd-btn" id="navXmas" type="button" aria-expanded="false" aria-controls="xmasMenu">Navidad <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
@@ -101,6 +102,18 @@
 </header>
 
 <main id="main">
+  <!-- HOME: a living mosaic of everything Bordec makes -->
+  <section class="home" id="inicio" aria-labelledby="homeTitle" hidden>
+    <div class="wrap home-head">
+      <h1 class="home-title" id="homeTitle"><span data-k="home_title">Todo lo que hacemos</span></h1>
+      <p class="home-pill"><span data-k="home_sub">Bordado, estampado DTF e impresión 3D</span></p>
+    </div>
+    <div class="home-stage"><div class="home-mosaic" id="homeMosaic"></div></div>
+    <div class="wrap home-tools" id="homeTools" hidden>
+      <button class="btn btn-dark" type="button" id="homeAdd">+ Cuadro</button>
+      <label class="check"><input type="checkbox" id="homePub"> Mostrar el inicio al público (y abrir la página aquí)</label>
+    </div>
+  </section>
   <!-- HERO / WHEEL -->
   <section class="hero" id="temporada" aria-labelledby="heroTitle">
     <span class="cross" style="left:4%;top:28px" aria-hidden="true"></span>
@@ -183,6 +196,7 @@
       <div class="foot-bottom">
         <ul class="foot-info" id="footInfo"></ul>
         <nav class="foot-nav" aria-label="Pie de página">
+          <a href="#inicio" data-home>Inicio</a>
           <a href="#avengers-doomsday">Avengers Doomsday</a>
           <a href="#navidad-3d">Navidad 3D</a>
           <a href="#playeras-navidad">Playeras Navidad</a>
@@ -409,6 +423,7 @@
   <div class="drawer-in">
     <div class="drawer-head"><h3>Menú</h3><button class="iconbtn" type="button" data-close aria-label="Cerrar menú"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button></div>
     <nav class="mnav" aria-label="Secciones">
+      <a href="#inicio" data-home>Inicio</a>
       <a href="#avengers-doomsday" data-col="avengers-doomsday">Avengers Doomsday</a>
       <p class="mnav-group">Navidad</p>
       <a href="#navidad-3d" data-col="navidad-3d" class="sub">Navidad 3D</a>
@@ -578,6 +593,34 @@
 </dialog>
 
 <!-- Image viewer (cards without product) -->
+<dialog id="dlgTile" class="dlg dlg-md" aria-labelledby="tlTitle">
+  <form id="tlForm" class="form" novalidate>
+    <div class="drawer-head">
+      <h3 id="tlTitle">Cuadro del inicio</h3>
+      <button class="iconbtn" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
+    </div>
+    <p class="form-help" id="tlPos"></p>
+    <div class="tl-preview"><img id="tlImg" alt="" src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" hidden><span id="tlEmpty">Sin foto todavía</span></div>
+    <div class="photo-row">
+      <label class="btn btn-sm btn-outline" for="tlFile">Subir foto</label>
+      <input id="tlFile" type="file" accept="image/*" hidden>
+    </div>
+    <p class="form-help">Foto cuadrada, de preferencia 1000 × 1000 px.</p>
+    <label for="tlLabel">Nombre (para quien usa lector de pantalla y al pasar el mouse)</label>
+    <input id="tlLabel" type="text" maxlength="60" placeholder="Ej. Playeras bordadas">
+    <label for="tlLink">Al tocarlo lleva a</label>
+    <select id="tlLink"></select>
+    <div class="ed-actions sl-move">
+      <button class="btn btn-sm btn-outline" type="button" id="tlLeft">Mover antes</button>
+      <button class="btn btn-sm btn-outline" type="button" id="tlRight">Mover después</button>
+    </div>
+    <div class="ed-actions">
+      <button class="btn btn-dark" type="submit">Guardar cuadro</button>
+      <button class="btn btn-ghost danger" type="button" id="tlDel">Quitar cuadro</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="dlgImg" class="dlg dlg-img" aria-label="Imagen">
   <button class="iconbtn dlg-x" type="button" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8"/></svg></button>
   <img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" id="imgView" alt="">
@@ -641,6 +684,6 @@
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="supabase.js?v=2.45.4"></script>
-<script src="app.js?v=202611222033"></script>
+<script src="app.js?v=202611222333"></script>
 </body>
 </html>
