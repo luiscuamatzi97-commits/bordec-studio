@@ -692,3 +692,4 @@ body.editing .htile.empty { cursor: pointer; border-style: dashed; }
 @keyframes homeHead { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .home.enter .htile, .home.enter .home-head { animation: none; } }
 body:not(.editing) .htile.empty { opacity: .35; box-shadow: none; }
+.size-note { margin: 0; font-size: var(--t-2); color: var(--gray-dark); }

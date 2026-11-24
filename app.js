@@ -66,7 +66,9 @@ function waLink(text) { const n = waNumber(); return n ? `https://wa.me/${n}?tex
 function unitPrice(p, q) { return p.wholesale_price && p.wholesale_min && q >= p.wholesale_min ? Number(p.wholesale_price) : Number(p.price); }
 const priceLabel = p => Number(p.price) > 0 ? fmt(p.price) : 'Cotizar';
 function decoOf(p) { if (p.image_url) return 'image'; return /bordad/i.test(p.category + ' ' + p.name) ? 'emb' : 'dtf'; }
-function sizesOf(p) { if (p.garment === 'print3d') return []; const s = Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : []; return s.length ? s : (p.garment === 'sheet' ? ['Carta'] : ['S', 'M', 'L', 'XL']); }
+const WS_3D = 'Pregunta por el precio a mayoreo a partir de 15 piezas';
+const sizeWord = p => p && p.garment === 'print3d' ? 'tamaño' : 'talla';
+function sizesOf(p) { if (p.garment === 'print3d') return Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : []; const s = Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : []; return s.length ? s : (p.garment === 'sheet' ? ['Carta'] : ['S', 'M', 'L', 'XL']); }
 function colorsOf(p) {
   const out = [{ n: 'Original', h: p.color || '#0b0b0b' }];
   for (const c of (Array.isArray(p.colors) ? p.colors : [])) {
@@ -422,7 +424,7 @@ function selectW(force) {
   $('#wName').textContent = s.text || (p ? p.name : '');
   setArc(s);
   if (!p) { $('#wPrice').textContent = ''; return; }
-  $('#wPrice').innerHTML = `<span>${esc(priceLabel(p))}</span>${p.wholesale_price && p.wholesale_min ? `<span>Mayoreo ${fmt(p.wholesale_price)} desde ${p.wholesale_min} pzs</span>` : ''}`;
+  $('#wPrice').innerHTML = `<span>${esc(priceLabel(p))}</span>${p.garment === 'print3d' ? `<span>${WS_3D}</span>` : p.wholesale_price && p.wholesale_min ? `<span>Mayoreo ${fmt(p.wholesale_price)} desde ${p.wholesale_min} pzs</span>` : ''}`;
 }
 // with 4 cards or fewer the wheel does not loop: positions stay between the first and last card
 const loops = () => SL.length > 4;
@@ -493,6 +495,8 @@ function renderOptions(prefix, p, state) {
   if (!state.size || !sizes.includes(state.size)) state.size = sizes.includes('M') ? 'M' : sizes[0];
   $(`#${prefix}Sizes`).innerHTML = sizes.map(s => `<button type="button" class="size" role="radio" aria-checked="${s === state.size}" data-size="${esc(s)}">${esc(s)}</button>`).join('');
   $(`#${prefix}SizesBox`).hidden = !sizes.length || (sizes.length < 2 && sizes[0] === 'Carta');
+  { const lb = $(`#${prefix}SizesBox .box-label`), w = sizeWord(p) === 'tamaño' ? 'Tamaño' : 'Talla'; if (lb) lb.textContent = w; $(`#${prefix}Sizes`).setAttribute('aria-label', w);
+    if (p.garment === 'print3d' && !sizes.length) { $(`#${prefix}SizesBox`).hidden = false; $(`#${prefix}Sizes`).innerHTML = '<p class="size-note">Pregunta por los tamaños disponibles</p>'; } }
   $(`#${prefix}ColorsBox`).hidden = cols.length < 2; // a single colour is not a choice
   $(`#${prefix}Colors`).innerHTML = cols.map((c, i) => `<button type="button" class="cswatch" role="radio" aria-checked="${i === state.color}" aria-label="${esc(c.n)}" title="${esc(c.n)}" data-color="${i}" style="background:${safeColor(c.h)}"></button>`).join('');
   $(`#${prefix}ColorName`).textContent = cols[state.color] ? cols[state.color].n : '';
@@ -528,7 +532,7 @@ function renderCatalog() {
 }
 function card(it, k) {
   const p = it.p, admin = editing && !preview;
-  const ws = p && p.wholesale_price && p.wholesale_min ? `<span class="card-ws"><span>Mayoreo ${fmt(p.wholesale_price)}</span><span>${p.wholesale_min}+ pzs</span></span>` : '';
+  const ws = p && p.garment === 'print3d' ? `<span class="card-ws">${WS_3D}</span>` : p && p.wholesale_price && p.wholesale_min ? `<span class="card-ws"><span>Mayoreo ${fmt(p.wholesale_price)}</span><span>${p.wholesale_min}+ pzs</span></span>` : '';
   const label = !p ? 'Ver' : sizesOf(p).length > 1 || colorsOf(p).length > 1 ? 'Elegir' : 'Agregar';
   const action = admin ? `<button class="btn btn-dark card-add" type="button" data-sedit="${k}">Editar</button>`
     : `<button class="btn btn-dark card-add" type="button" data-slide="${k}">${label}</button>`;
@@ -579,7 +583,7 @@ function openProduct(id, img, design) {
   $('#pdDesc').textContent = p.description || '';
   $('#pd3d').hidden = p.garment !== 'print3d';
   $('#pdPrice').textContent = Number(p.price) > 0 ? fmt(p.price) + ' por pieza' : 'Precio a cotizar';
-  $('#pdWs').textContent = p.wholesale_price && p.wholesale_min ? `Mayoreo: ${fmt(p.wholesale_price)} por pieza desde ${p.wholesale_min} piezas` : '';
+  $('#pdWs').textContent = p.garment === 'print3d' ? '' : p.wholesale_price && p.wholesale_min ? `Mayoreo: ${fmt(p.wholesale_price)} por pieza desde ${p.wholesale_min} piezas` : '';
   $('#pdQty').value = 1; renderOptions('pd', p, pd); pdTotal();
   $('#dlgProduct').showModal();
 }
@@ -587,7 +591,7 @@ function pdTotal() {
   const q = Math.max(1, parseInt($('#pdQty').value, 10) || 1);
   $('#pdTotal').textContent = cur && Number(cur.price) > 0 ? (() => { const u = unitPrice(cur, q); return `${q} × ${fmt(u)} = ${fmt(u * q)}${u < cur.price ? ' (mayoreo)' : ''}`; })() : '';
   const c = cur && colorsOf(cur).length > 1 ? colorsOf(cur)[pd.color] : null;
-  const wa = cur && waLink(`Hola ${S.name}, me interesa: ${q} × ${cur.name}${curDesign ? ` [${curDesign.code}]` : ''}${pd.size ? `, talla ${pd.size}` : ''}${c ? `, color ${c.n}` : ''}. ¿Me das más información?${curDesign && curDesign.img ? `\n\nFoto del diseño: ${curDesign.img}` : ''}`);
+  const wa = cur && waLink(`Hola ${S.name}, me interesa: ${q} × ${cur.name}${curDesign ? ` [${curDesign.code}]` : ''}${pd.size ? `, ${sizeWord(cur)} ${pd.size}` : ''}${c ? `, color ${c.n}` : ''}. ¿Me das más información?${curDesign && curDesign.img ? `\n\nFoto del diseño: ${curDesign.img}` : ''}`);
   $('#pdWa').hidden = !wa; if (wa) $('#pdWa').href = wa;
 }
 $('#pdSizes').addEventListener('click', e => { const b = e.target.closest('[data-size]'); if (!b) return; pd.size = b.dataset.size; renderOptions('pd', cur, pd); pdTotal(); });
@@ -604,7 +608,7 @@ function addToBag(p, q, size, color) {
   const item = { id: p.id, q, size: size || '', cn: color ? color.n : '', ch: color ? color.h : '', code: d ? d.code : '', img: d ? d.img : '' };
   const it = bag.find(b => keyOf(b) === keyOf(item));
   if (it) it.q += q; else bag.push(item);
-  saveBag(); renderBag(); toast(`Agregaste ${p.name}${size ? ' talla ' + size : ''} a tu bolsa`);
+  saveBag(); renderBag(); toast(`Agregaste ${p.name}${size ? ` ${sizeWord(p)} ${size}` : ''} a tu bolsa`);
 }
 function bagLines() { return bag.map(b => ({ ...b, p: P.find(x => x.id === b.id) })).filter(b => b.p); }
 const qtyOfProduct = id => bag.filter(b => b.id === id).reduce((s, b) => s + b.q, 0);
@@ -613,7 +617,7 @@ function renderBag() {
   $('#bagCount').textContent = n; $('#bagCount').classList.toggle('has', n > 0);
   $('#bagList').innerHTML = L.length ? L.map((b, i) => {
     const tq = qtyOfProduct(b.id), u = unitPrice(b.p, tq), isWs = u < b.p.price;
-    const opts = [b.code && `Diseño ${b.code}`, b.size && `Talla ${b.size}`, b.cn && b.cn].filter(Boolean).join(', ');
+    const opts = [b.code && `Diseño ${b.code}`, b.size && `${sizeWord(b.p) === 'tamaño' ? 'Tamaño' : 'Talla'} ${b.size}`, b.cn && b.cn].filter(Boolean).join(', ');
     return `<div class="bag-item">
       <div class="bag-thumb">${b.img ? `<img src="${esc(b.img)}" alt="">` : garmentSVG(b.p, { color: b.ch || undefined })}</div>
       <div><p class="bag-name">${esc(b.p.name)}</p><p class="bag-meta">${esc(opts)}${opts ? '<br>' : ''}${Number(b.p.price) > 0 ? `<span class="${isWs ? 'ws' : ''}">${fmt(u)} c/u${isWs ? ' · mayoreo' : ''}</span>` : 'A cotizar'}</p>
@@ -629,7 +633,7 @@ function renderBag() {
 function orderText() {
   const L = bagLines();
   const lines = L.map(b => {
-    const u = unitPrice(b.p, qtyOfProduct(b.id)); const opts = [b.size && `talla ${b.size}`, b.cn && `color ${b.cn}`].filter(Boolean).join(', ');
+    const u = unitPrice(b.p, qtyOfProduct(b.id)); const opts = [b.size && `${sizeWord(b.p)} ${b.size}`, b.cn && `color ${b.cn}`].filter(Boolean).join(', ');
     return `• ${b.q} × ${b.p.name}${b.code ? ` [${b.code}]` : ''}${opts ? ` (${opts})` : ''}${Number(b.p.price) > 0 ? ` — ${fmt(u)} c/u = ${fmt(u * b.q)}${u < b.p.price ? ' (mayoreo)' : ''}` : ' — a cotizar'}${b.img ? `\n   Foto del diseño: ${b.img}` : ''}`;
   });
   const total = L.reduce((s, b) => s + unitPrice(b.p, qtyOfProduct(b.id)) * b.q, 0);
