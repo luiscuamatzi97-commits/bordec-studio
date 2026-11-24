@@ -1457,6 +1457,78 @@ $('#fxDelYes').addEventListener('click', async () => {
   if (ok) { renderFacts(); $('#dlgFact').close(); toast('Recuadro quitado'); }
 });
 
+/* ---------------- Admin: bulk price editor ---------------- */
+let prEdits = {};
+const prOrder = slug => {
+  // same order as the catalog: saved cards first, then any product of the collection without a card
+  const c = COLS.find(x => x.slug === slug), ids = [];
+  if (c) slidesOf(c).forEach(s => { if (s.product_id && !ids.includes(s.product_id)) ids.push(s.product_id); });
+  const inCol = P.filter(p => p.collection === slug);
+  const byId = new Map(inCol.map(p => [p.id, p]));
+  return [...ids.map(id => byId.get(id)).filter(Boolean), ...inCol.filter(p => !ids.includes(p.id)).sort(bySort)];
+};
+function prRows() {
+  const slug = $('#prCol').value, q = $('#prQ').value.trim().toLowerCase();
+  const list = (slug === '*' ? [...P].sort(bySort) : prOrder(slug)).filter(p => !q || p.name.toLowerCase().includes(q));
+  $('#prBody').innerHTML = list.length ? list.map(p => {
+    const img = p.model_url || p.image_url, val = p.id in prEdits ? prEdits[p.id] : p.price;
+    return `<tr data-id="${esc(p.id)}" class="${p.id in prEdits ? 'is-dirty' : ''}">
+      <td>${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ''}</td>
+      <td class="pr-name">${esc(p.name)}${p.visible ? '' : '<small>Oculta</small>'}${p.sizes && p.sizes.length === 1 && p.garment === 'print3d' ? `<small>${esc(p.sizes[0])}</small>` : ''}</td>
+      <td class="pr-old">${fmt(p.price)}</td>
+      <td><input type="number" min="0" step="1" inputmode="decimal" value="${esc(val)}" aria-label="Nuevo precio de ${esc(p.name)}"></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="4"><p class="form-help">No hay piezas con ese nombre.</p></td></tr>';
+  prCount();
+}
+function prCount() {
+  const n = Object.keys(prEdits).length;
+  $('#prCount').textContent = n ? `${n} precio${n === 1 ? '' : 's'} por guardar` : 'Sin cambios';
+  $('#prSave').disabled = !n; $('#prUndo').disabled = !n;
+  $('#prSave').textContent = n ? `Guardar ${n} precio${n === 1 ? '' : 's'}` : 'Guardar precios';
+}
+$('#aPrices').addEventListener('click', () => {
+  prEdits = {}; $('#prErr').hidden = true; $('#prQ').value = '';
+  const cols = COLS.filter(c => P.some(p => p.collection === c.slug));
+  $('#prCol').innerHTML = cols.map(c => `<option value="${esc(c.slug)}">${esc(c.title)}</option>`).join('') + '<option value="*">Todas las piezas</option>';
+  $('#prCol').value = cols.some(c => c.slug === COL.slug) ? COL.slug : (cols[0] ? cols[0].slug : '*');
+  prRows(); $('#dlgPrices').showModal();
+});
+$('#prCol').addEventListener('change', prRows);
+$('#prQ').addEventListener('input', prRows);
+$('#prBody').addEventListener('input', e => {
+  const inp = e.target.closest('input'); if (!inp) return;
+  const tr = inp.closest('tr'), id = tr.dataset.id, p = P.find(x => x.id === id); if (!p) return;
+  const v = inp.value.trim();
+  if (v !== '' && Number(v) >= 0 && Number(v) !== p.price) prEdits[id] = Number(v); else delete prEdits[id];
+  tr.classList.toggle('is-dirty', id in prEdits); prCount();
+});
+$('#prUndo').addEventListener('click', () => { prEdits = {}; $('#prErr').hidden = true; prRows(); });
+const prKeep = () => Object.keys(prEdits).length && !confirm('Tienes precios sin guardar. ¿Cerrar y perder los cambios?');
+$('#dlgPrices').addEventListener('cancel', e => { if (prKeep()) e.preventDefault(); });
+// runs before the shared close handler: the X button or a click outside asks first if there are unsaved prices
+$('#dlgPrices').addEventListener('click', e => {
+  if ((e.target.closest('[data-close]') || e.target === e.currentTarget) && prKeep()) e.stopImmediatePropagation();
+}, true);
+$('#prForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const ids = Object.keys(prEdits); if (!ids.length) return;
+  $('#prErr').hidden = true; $('#prSave').disabled = true; $('#prSave').textContent = 'Guardando…';
+  const now = new Date().toISOString();
+  const res = await Promise.all(ids.map(id => sb.from('web_products').update({ price: prEdits[id], updated_at: now }).eq('id', id).select().single()));
+  const failed = [];
+  res.forEach((r, k) => {
+    if (r.error || !r.data) { failed.push(ids[k]); return; }
+    const n = norm(r.data), i = P.findIndex(x => x.id === n.id); if (i >= 0) P[i] = n;
+    delete prEdits[ids[k]];
+  });
+  renderWheel(curId); renderCatalog(); renderBag(); prRows();
+  const ok = ids.length - failed.length;
+  if (failed.length) { $('#prErr').hidden = false; $('#prErr').textContent = `No se guardaron ${failed.length} precio${failed.length === 1 ? '' : 's'}. Revisa tu conexión e inténtalo otra vez.`; }
+  if (ok) toast(`Guardaste ${ok} precio${ok === 1 ? '' : 's'}`);
+  if (!failed.length) $('#dlgPrices').close();
+});
+
 /* ---------------- Admin: page settings ---------------- */
 let pgLogo = '', pgFav = '';
 $('#aPage').addEventListener('click', () => {
