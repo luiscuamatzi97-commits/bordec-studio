@@ -316,7 +316,7 @@ function applyColMode() {
 }
 // collections can be kept out of public view while the owner finishes them
 const colHidden = c => !!(S.col_hidden && S.col_hidden[c.slug]);
-const showAllCols = () => editing;
+const showAllCols = () => isAdmin; // the owner sees hidden collections, also in "Ver como cliente"
 function applyColVisibility() {
   const all = showAllCols();
   for (const c of COLS) {
@@ -691,7 +691,7 @@ const homePublished = () => !!S.home_published;
 const isHomeRoute = () => location.hash === '#inicio' || (!location.hash && homePublished());
 let homeOn = false, homeTimer = 0;
 function applyHomeMode() {
-  const canSee = homePublished() || editing;
+  const canSee = homePublished() || isAdmin;
   let on = isHomeRoute();
   if (on && !canSee) { on = false; if (location.hash === '#inicio') history.replaceState(null, '', '#' + COL.slug); }
   homeOn = on;
