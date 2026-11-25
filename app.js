@@ -582,7 +582,7 @@ function openProduct(id, img, design) {
   $('#pdBadge').hidden = !p.badge; $('#pdBadge').textContent = p.badge || '';
   $('#pdDesc').textContent = p.description || '';
   $('#pd3d').hidden = p.garment !== 'print3d';
-  $('#pdPrice').textContent = Number(p.price) > 0 ? fmt(p.price) + ' por pieza' : 'Precio a cotizar';
+  $('#pdPrice').textContent = Number(p.price) > 0 ? fmt(p.price) + ' por ' + (p.price_per || 'pieza') : 'Precio a cotizar';
   $('#pdWs').textContent = p.garment === 'print3d' ? '' : p.wholesale_price && p.wholesale_min ? `Mayoreo: ${fmt(p.wholesale_price)} por pieza desde ${p.wholesale_min} piezas` : '';
   $('#pdQty').value = 1; renderOptions('pd', p, pd); pdTotal();
   $('#dlgProduct').showModal();
@@ -936,7 +936,7 @@ function openEditor(id) {
   ed = p ? { ...p } : { id: null, name: 'Nueva prenda', category: cat !== 'Todas' ? cat : 'Diseños DTF personalizado', description: '', price: 0, wholesale_price: null, wholesale_min: null, garment: 'tee', color: '#0b0b0b', image_url: null, model_url: null, sizes: ['S', 'M', 'L', 'XL'], colors: [], in_season: false, collection: (COL && COL.slug) || null, visible: true, badge: '', sort: (Math.max(0, ...P.map(x => x.sort || 0)) + 1) };
   $('#edTitle').textContent = p ? 'Editar prenda' : 'Nueva prenda';
   $('#edName').value = ed.name; $('#edCat').value = ed.category; $('#edDesc').value = ed.description || '';
-  $('#edGarment').value = ed.garment; $('#edPrice').value = ed.price || ''; $('#edWs').value = ed.wholesale_price ?? ''; $('#edWsMin').value = ed.wholesale_min ?? '';
+  $('#edGarment').value = ed.garment; $('#edPrice').value = ed.price || ''; $('#edPricePer').value = ed.price_per || ''; $('#edWs').value = ed.wholesale_price ?? ''; $('#edWsMin').value = ed.wholesale_min ?? '';
   $('#edSizes').value = (ed.sizes || []).join(', '); $('#edColors').value = colorsToText(ed.colors);
   $('#edBadge').value = ed.badge || ''; $('#edSort').value = ed.sort ?? 0;
   $('#edCollection').value = ed.collection || ''; $('#edVisible').checked = !!ed.visible;
@@ -948,6 +948,7 @@ function readEditor() {
   ed.name = $('#edName').value.trim(); ed.category = $('#edCat').value.trim() || 'Otros';
   ed.description = $('#edDesc').value.trim(); ed.garment = $('#edGarment').value;
   ed.price = Math.max(0, +$('#edPrice').value || 0);
+  ed.price_per = $('#edPricePer').value.trim().replace(/^por\s+/i, '') || null;
   ed.wholesale_price = $('#edWs').value === '' ? null : Math.max(0, +$('#edWs').value);
   ed.wholesale_min = $('#edWsMin').value === '' ? null : Math.max(0, parseInt($('#edWsMin').value, 10));
   ed.sizes = $('#edSizes').value.split(',').map(s => s.trim()).filter(Boolean);
@@ -981,7 +982,7 @@ $('#edModelDel').addEventListener('click', () => { ed.model_url = null; edImgs()
 $('#edForm').addEventListener('submit', async e => {
   e.preventDefault(); readEditor();
   if (!ed.name) { $('#edErr').hidden = false; $('#edErr').textContent = 'Escribe un nombre para la prenda.'; $('#edName').focus(); return; }
-  const row = { name: ed.name, category: ed.category, description: ed.description, price: ed.price, wholesale_price: ed.wholesale_price, wholesale_min: ed.wholesale_min, garment: ed.garment, color: ed.color, image_url: ed.image_url, model_url: ed.model_url, sizes: ed.sizes, colors: ed.colors, collection: ed.collection, visible: ed.visible, badge: ed.badge, sort: ed.sort, updated_at: new Date().toISOString() };
+  const row = { name: ed.name, category: ed.category, description: ed.description, price: ed.price, price_per: ed.price_per, wholesale_price: ed.wholesale_price, wholesale_min: ed.wholesale_min, garment: ed.garment, color: ed.color, image_url: ed.image_url, model_url: ed.model_url, sizes: ed.sizes, colors: ed.colors, collection: ed.collection, visible: ed.visible, badge: ed.badge, sort: ed.sort, updated_at: new Date().toISOString() };
   $('#edSave').textContent = 'Guardando…';
   const { data, error } = await (ed.id ? sb.from('web_products').update(row).eq('id', ed.id).select().single() : sb.from('web_products').insert(row).select().single());
   $('#edSave').textContent = 'Guardar prenda';
