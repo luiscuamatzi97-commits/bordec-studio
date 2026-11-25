@@ -44,6 +44,8 @@ let S = { ...DEF };
 let P = [];
 let isAdmin = false, editing = false, preview = false;
 let cat = 'Todas';
+// the collection the visitor asked for in the link: a hidden one (or an old cached copy that still says hidden) only sends them elsewhere for now, and they return to it once it shows as public
+let wantSlug = location.hash.slice(1);
 let bag = [];
 try { bag = JSON.parse(localStorage.getItem('bordec_bag') || '[]').filter(b => b && b.id); } catch (e) { bag = []; }
 const saveBag = () => { try { localStorage.setItem('bordec_bag', JSON.stringify(bag)); } catch (e) {} };
@@ -319,6 +321,8 @@ const colHidden = c => !!(S.col_hidden && S.col_hidden[c.slug]);
 const showAllCols = () => isAdmin; // the owner sees hidden collections, also in "Ver como cliente"
 function applyColVisibility() {
   const all = showAllCols();
+  const want = COLS.find(c => c.slug === wantSlug);
+  if (want && want !== COL && (all || !colHidden(want))) { history.replaceState(null, '', '#' + want.slug); setCollection(want, false); return; }
   for (const c of COLS) {
     const off = colHidden(c);
     $$(`a[href="#${c.slug}"]`).forEach(x => { x.hidden = off && !all; x.classList.toggle('col-off', off && all); });
@@ -817,7 +821,7 @@ function setCollection(c, scroll) {
   if (scroll) $('#temporada').scrollIntoView({ behavior: RM.matches ? 'auto' : 'smooth', block: 'start' });
 }
 const closeXmas = () => { $('#xmasMenu').hidden = true; $('#navXmas').setAttribute('aria-expanded', 'false'); };
-addEventListener('hashchange', () => { const c = colFromHash(); if (c) setCollection(c, true); else applyHomeMode(); closeXmas(); });
+addEventListener('hashchange', () => { wantSlug = location.hash.slice(1); const c = colFromHash(); if (c) setCollection(c, true); else applyHomeMode(); closeXmas(); });
 $('#navXmas').addEventListener('click', e => { e.stopPropagation(); const open = $('#xmasMenu').hidden; $('#xmasMenu').hidden = !open; $('#navXmas').setAttribute('aria-expanded', String(open)); });
 document.addEventListener('click', e => { if (!e.target.closest('#navXmasWrap')) closeXmas(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeXmas(); });
