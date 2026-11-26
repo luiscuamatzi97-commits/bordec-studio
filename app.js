@@ -5,13 +5,21 @@
 const SB_URL = 'https://wrzptgalxvvonsxfpinr.supabase.co';
 const SB_KEY = 'sb_publishable_pG0HYShywO4Mj6cqNJSfDw_w7e15bi1';
 const BUCKET = 'web-media';
-const sb = window.supabase.createClient(SB_URL, SB_KEY);
+// reads give up after a while instead of hanging forever on a bad mobile connection; uploads keep the default
+const timedFetch = (url, opts) => {
+  const o = opts || {}, m = (o.method || 'GET').toUpperCase();
+  if ((m !== 'GET' && m !== 'HEAD') || typeof AbortController === 'undefined' || o.signal) return fetch(url, o);
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 10000);
+  return fetch(url, Object.assign({}, o, { signal: c.signal })).finally(() => clearTimeout(t));
+};
+const sb = window.supabase.createClient(SB_URL, SB_KEY, { global: { fetch: timedFetch } });
 
+const nz = (v, d) => (v == null ? d : v); // same as v ?? d, which older phones cannot read
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 // colours from the database only ever reach markup as a plain hex or rgb() value
-const safeColor = (c, d = '#0b0b0b') => { const v = String(c ?? '').trim(); return /^#[0-9a-f]{3,8}$/i.test(v) || /^rgba?\([\d\s.,%]+\)$/i.test(v) ? v : d; };
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const safeColor = (c, d = '#0b0b0b') => { const v = String(c == null ? '' : c).trim(); return /^#[0-9a-f]{3,8}$/i.test(v) || /^rgba?\([\d\s.,%]+\)$/i.test(v) ? v : d; };
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => '$' + Number(n || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 });
 const RM = matchMedia('(prefers-reduced-motion: reduce)');
 const THREADS = ['#ff2525', '#006dff', '#a74dff', '#14d600'];
@@ -159,7 +167,7 @@ function paintSwatches(root) { $$('.sw[data-c]', root || document).forEach(s => 
 paintSwatches();
 
 /* ---------------- Settings / text ---------------- */
-const FAV_DEF = document.getElementById('favicon')?.getAttribute('href');
+const FAV_DEF = (document.getElementById('favicon') || { getAttribute: () => null }).getAttribute('href');
 function setFavicon(url) {
   const l = document.getElementById('favicon'); if (!l) return;
   l.href = url || FAV_DEF; l.removeAttribute('type');
@@ -169,7 +177,7 @@ function setFavicon(url) {
 }
 function applySettings() {
   if ($('#wAll')) applyHeroBtns();
-  $$('[data-k]').forEach(el => { if (document.activeElement !== el) el.textContent = S[el.dataset.k] ?? DEF[el.dataset.k] ?? ''; });
+  $$('[data-k]').forEach(el => { if (document.activeElement !== el) el.textContent = nz(S[el.dataset.k], nz(DEF[el.dataset.k], '')); });
   document.title = S.name || DEF.name;
   applyHero(); applyBgs();
   let logo = $('#logo');
@@ -674,20 +682,44 @@ let cacheSig = '';
 function readCache() { try { const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); return c && c.s && Array.isArray(c.p) ? c : null; } catch (e) { return null; } }
 function writeCache(s, p) { try { const v = JSON.stringify({ s, p }); localStorage.setItem(CACHE_KEY, v); return v; } catch (e) { return ''; } }
 function reveal() { document.body.classList.remove('is-loading'); }
-async function load() {
+const wait = ms => new Promise(r => setTimeout(r, ms));
+async function fetchAll() {
   const [s, p] = await Promise.all([
     sb.from('web_settings').select('data').eq('id', 1).maybeSingle(),
     sb.from('web_products').select('*').order('sort')
   ]);
+  return { s, p };
+}
+// copy of the catalogue published with the site, for when the database cannot be reached at all
+async function fetchSnapshot() {
+  try {
+    const r = await fetch('data/catalogo.json', { cache: 'no-cache' });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j && j.s && Array.isArray(j.p) ? { s: { data: { data: j.s }, error: null }, p: { data: j.p, error: null }, snap: true } : null;
+  } catch (e) { return null; }
+}
+async function load() {
+  let r = await fetchAll();
+  // a slow or dropped mobile connection: try once more before giving up
+  if (r.p.error || r.s.error) { await wait(1500); r = await fetchAll(); }
+  if ((r.p.error || r.s.error) && !cacheSig) { const snap = await fetchSnapshot(); if (snap) r = snap; }
+  const { s, p } = r;
   if (s.data && s.data.data) S = { ...DEF, ...s.data.data };
-  if (p.error) { $('#grid').innerHTML = '<p class="empty">No pudimos cargar el catálogo. Revisa tu conexión y recarga la página.</p>'; $('#stName').textContent = 'No pudimos cargar la temporada'; }
+  if (p.error) {
+    if (cacheSig) { reveal(); return; } // keep the copy already on screen
+    $('#grid').innerHTML = '<p class="empty">No pudimos cargar el catálogo. Revisa tu conexión e inténtalo otra vez.<br><button class="btn btn-dark" type="button" data-retry>Reintentar</button></p>';
+    $('#stName').textContent = 'No pudimos cargar la temporada';
+    reveal(); return;
+  }
   P = (p.data || []).map(norm);
-  const sig = !p.error && s.data && s.data.data ? writeCache(s.data.data, p.data || []) : '';
+  const sig = !r.snap && s.data && s.data.data ? writeCache(s.data.data, p.data || []) : '';
   // nothing changed since the cached copy already on screen: keep it still, no redraw
   if (!(sig && sig === cacheSig && !isAdmin)) renderAll();
-  cacheSig = sig;
+  if (sig) cacheSig = sig;
   reveal();
 }
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-retry]')) location.reload(); });
 function renderAll() { applyColMode(); applySettings(); applyCards(); renderRoll(); renderFacts(); renderWheel(curId); renderCatalog(); renderBag(); }
 
 /* ---------------- Home: a living mosaic of everything Bordec makes ---------------- */
@@ -884,11 +916,11 @@ function unbindEditable(el) {
 function stopLink(e) { e.preventDefault(); e.stopPropagation(); }
 function onEditKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.currentTarget.blur(); }
-  if (e.key === 'Escape') { e.currentTarget.textContent = S[e.currentTarget.dataset.k] ?? ''; e.currentTarget.blur(); }
+  if (e.key === 'Escape') { e.currentTarget.textContent = nz(S[e.currentTarget.dataset.k], ''); e.currentTarget.blur(); }
 }
 async function onEditBlur(e) {
   const k = e.currentTarget.dataset.k, v = e.currentTarget.textContent.replace(/\s+/g, ' ').trim();
-  if (!v) { e.currentTarget.textContent = S[k] ?? DEF[k]; return; }
+  if (!v) { e.currentTarget.textContent = nz(S[k], DEF[k]); return; }
   if (v !== S[k]) await saveSettings({ [k]: v });
 }
 async function saveSettings(patch) {
@@ -940,9 +972,9 @@ function openEditor(id) {
   ed = p ? { ...p } : { id: null, name: 'Nueva prenda', category: cat !== 'Todas' ? cat : 'Diseños DTF personalizado', description: '', price: 0, wholesale_price: null, wholesale_min: null, garment: 'tee', color: '#0b0b0b', image_url: null, model_url: null, sizes: ['S', 'M', 'L', 'XL'], colors: [], in_season: false, collection: (COL && COL.slug) || null, visible: true, badge: '', sort: (Math.max(0, ...P.map(x => x.sort || 0)) + 1) };
   $('#edTitle').textContent = p ? 'Editar prenda' : 'Nueva prenda';
   $('#edName').value = ed.name; $('#edCat').value = ed.category; $('#edDesc').value = ed.description || '';
-  $('#edGarment').value = ed.garment; $('#edPrice').value = ed.price || ''; $('#edPricePer').value = ed.price_per || ''; $('#edWs').value = ed.wholesale_price ?? ''; $('#edWsMin').value = ed.wholesale_min ?? '';
+  $('#edGarment').value = ed.garment; $('#edPrice').value = ed.price || ''; $('#edPricePer').value = ed.price_per || ''; $('#edWs').value = nz(ed.wholesale_price, ''); $('#edWsMin').value = nz(ed.wholesale_min, '');
   $('#edSizes').value = (ed.sizes || []).join(', '); $('#edColors').value = colorsToText(ed.colors);
-  $('#edBadge').value = ed.badge || ''; $('#edSort').value = ed.sort ?? 0;
+  $('#edBadge').value = ed.badge || ''; $('#edSort').value = nz(ed.sort, 0);
   $('#edCollection').value = ed.collection || ''; $('#edVisible').checked = !!ed.visible;
   $('#edErr').hidden = true; $('#edConfirm').hidden = true; $('#edDel').hidden = !p;
   renderSwatches(); edImgs(); edPreview();
@@ -1606,7 +1638,7 @@ $('#aImport').addEventListener('click', async () => {
 });
 
 /* ---------------- Boot ---------------- */
-RM.addEventListener?.('change', () => layoutW(true));
+if (RM.addEventListener) RM.addEventListener('change', () => layoutW(true)); else if (RM.addListener) RM.addListener(() => layoutW(true));
 COL = colFromHash() || COLS[0]; cat = COL.title;
 const cached = readCache();
 if (cached) {
@@ -1614,6 +1646,7 @@ if (cached) {
   renderAll(); setCollection(COL, false); reveal();
 } else renderAll();
 setTimeout(reveal, 8000); // never leave the loader up if the network is down
+window.__bordecBoot = true;
 load().then(() => { if (!cached) setCollection(COL, false); return checkSession(); }).catch(reveal);
 sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT' && isAdmin) setAdmin(false); });
 })();

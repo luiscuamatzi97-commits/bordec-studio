@@ -1,3 +1,12 @@
+/* ---------- Fonts, served from this site ---------- */
+@font-face { font-family: 'Kanit'; font-style: normal; font-weight: 300; font-display: swap; src: url('fonts/kanit-300.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Kanit'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/kanit-400.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Kanit'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/kanit-500.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Kanit'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/kanit-600.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Clash Display'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/clash-display-500.woff2') format('woff2'); }
+@font-face { font-family: 'Clash Display'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/clash-display-600.woff2') format('woff2'); }
+@font-face { font-family: 'Clash Display'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/clash-display-700.woff2') format('woff2'); }
+
 /* Hallmark · v2.0.0 · polish (keep the look) · genre: editorial · job: buy (cart, then WhatsApp) · nav: pill bar of the collections and the bag, by brand · footer: about, contact and the giant wordmark, by brand · signature: the rotating wheel of season cards · copy: verbatim */
 /* Hallmark · pre-emit critique: P4 H4 E4 S4 R3 V3 · weakest: R, the hero carries a ring, crosses and a mark at once; each can be switched off in Portada, so the owner decides */
 /* Hallmark · waive 38iii · the blue band on the catalog heading word · Bordec chose this highlighter band as its catalog signature in the first redesign, from its own Pinterest reference */
@@ -716,3 +725,12 @@ body:not(.editing) .htile.empty { opacity: .35; box-shadow: none; }
   .pr-table th, .pr-table td { padding: 8px; }
   .pr-table input[type="number"] { width: 76px; }
 }
+
+/* ---------- Loader fallback: shown by guard.js when the page cannot start ---------- */
+.loader-fail .loader-mark { animation: none; }
+.loader-msg { display: grid; gap: 16px; justify-items: center; max-width: 34ch; padding: 0 24px; text-align: center; }
+.loader-msg p { margin: 0; font-size: 1rem; line-height: 1.5; }
+.loader-msg .loader-hint { font-size: .875rem; opacity: .7; }
+.loader-btn { min-height: 48px; padding: 0 28px; border: 0; border-radius: 999px; background: var(--paper); color: var(--ink); font: 500 1rem/1 var(--f-body); cursor: pointer; }
+.loader-btn:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+.empty .btn { margin-top: 16px; }
